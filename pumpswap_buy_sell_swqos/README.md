@@ -23,8 +23,8 @@
 </p>
 
 <p align="center">
-    <a href="#chinese">中文</a> |
-    <a href="#english">English</a> |
+    <a href="README_CN.md">中文</a> |
+    <a href="README.md">English</a> |
     <a href="https://fnzero.dev/">Website</a> |
     <a href="https://t.me/fnzero_group">Telegram</a> |
     <a href="https://discord.gg/vuazbGkqQE">Discord</a>
@@ -172,45 +172,6 @@ After selecting language, you'll see the main menu:
 ```
 
 ==================================================
-
-==================================================
-  Sol-SafeKey - Solana Key Management Tool
-==================================================
-
-Core Functions (3 operations):
-
-  1.  Create Plaintext Key
-  2.  Create Encrypted Key (bot)
-  3.  Decrypt Key
-
-  🔒 Wallet Status: Unlocked
-  U.  Unlock Wallet (for Solana Operations)
-
-  Advanced Security Features:
-  4.  Setup 2FA Authentication
-  5.  Generate Triple-Factor Wallet
-  6.  Unlock Triple-Factor Wallet
-
-  Solana On-Chain Operations:
-  7.  Check SOL Balance
-  8.  Transfer SOL
-  9.  Create WSOL ATA
-  10.  Wrap SOL → WSOL
-  11.  Unwrap WSOL → SOL
-  12.  Close WSOL ATA
-  13.  Transfer SPL Token
-  14.  Create Nonce Account
-  15.  Pump.fun Sell Token
-  16.  PumpSwap Sell Token
-  17.  Pump.fun Cashback (View & Claim)
-  18.  PumpSwap Cashback (View & Claim)
-
-  0.  Exit
-
-Select operation (0-18/U): _
-```
-
-==================================================
   Sol-SafeKey - Solana Key Management Tool
 ==================================================
 
@@ -264,10 +225,52 @@ Select operation (0-18/U): _
 1. Select `U` Unlock Wallet
 2. Enter keystore file path when prompted (default: keystore.json)
 3. Enter password
+4. After unlock, wallet is stored in session for Solana operations
 
+**Example Output:**
+```
+  Unlock Wallet
+Keystore file path [keystore.json]:
 
+Enter password: ********
 
-##### Step 7: Configure Nonce Account
+✅ Wallet unlocked successfully!
+📍 Current Wallet: 7xKm...9xW3
+```
+
+##### Step 4: Create WSOL ATA
+
+After unlocking wallet, you need to create a WSOL Associated Token Account. However, WSOL ATA is automatically created during the first buy operation, so you don't need to manually create it.
+
+If you want to create it manually for testing:
+
+1. From the main menu, enter the Solana operations
+2. Select "Create WSOL ATA"
+3. System will automatically create WSOL ATA
+
+**Note**: For the pumpswap_buy_sell_swqos example, WSOL ATA is automatically created during the first buy operation, so manual setup is not required.
+
+##### Step 5: Create Durable Nonce Account
+
+Create a nonce account for transaction replay protection (required when using 2+ SWQoS services):
+
+1. From Solana operations menu, select "Create Nonce Account"
+2. System will create a new nonce account
+3. Wait for transaction confirmation
+4. **Important**: Save the created nonce account address for configuration
+
+**Example Output:**
+```
+🚀 Creating Nonce Account...
+
+✅ Nonce account created and initialized successfully!
+   📍 Address: 5xKm...7xW3
+   🔐 Nonce value: 1234abcd...efgh5678
+
+💡 Please save this Nonce account address for future use!
+```
+
+##### Step 6: Configure Nonce Account
 
 Add the nonce account address created above to your configuration file:
 

@@ -23,8 +23,8 @@
 </p>
 
 <p align="center">
-    <a href="#chinese">中文</a> |
-    <a href="#english">English</a> |
+    <a href="README_CN.md">中文</a> |
+    <a href="README.md">English</a> |
     <a href="https://fnzero.dev/">官网</a> |
     <a href="https://t.me/fnzero_group">Telegram</a> |
     <a href="https://discord.gg/vuazbGkqQE">Discord</a>
