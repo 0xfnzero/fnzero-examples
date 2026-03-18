@@ -1,0 +1,60 @@
+# =========================
+# Solana 配置（生产环境，与 copy-bot config/prod/solana.yaml 一致）
+# =========================
+
+# RPC 节点（本示例不使用 gRPC，仅用 RPC 获取 nonce 等）
+rpc_url: "https://api.mainnet-beta.solana.com"
+
+# 钱包与 lookup table
+keystore_path: "./keystore.json"
+lookup_table_account: ""
+
+# Durable Nonce 账户：买卖可共用或分设；本示例仅通过 RPC 获取 nonce，无 gRPC 订阅
+nonce_config:
+  buy_nonce_accounts:
+    - ""
+  sell_nonce_accounts:
+    - ""
+
+swqos:
+  region: "Frankfurt"
+  enabled_providers:
+    - provider: "Astralane"
+      api_token: ""
+      enabled: false
+    - provider: "BlockRazor"
+      api_token: ""
+      enabled: false
+    - provider: "Jito"
+      api_token: ""
+      enabled: false
+    - provider: "NextBlock"
+      api_token: ""
+      enabled: false
+    - provider: "Bloxroute"
+      api_token: ""
+      enabled: false
+    - provider: "ZeroSlot"
+      api_token: ""
+      enabled: false
+    - provider: "Temporal"
+      api_token: ""
+      enabled: false
+    - provider: "FlashBlock"
+      api_token: ""
+      enabled: false
+    - provider: "Node1"
+      api_token: ""
+      enabled: false
+    - provider: "Stellium"
+      api_token: ""
+      enabled: false
+    - provider: "Speedlanding"
+      api_token: ""
+      enabled: false
+    - provider: "Soyas"
+      api_token: ""
+      enabled: false
+    - provider: "Default"
+      api_token: null
+      enabled: false

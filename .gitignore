@@ -1,0 +1,12 @@
+# 系统文件
+.DS_Store
+
+# 目标目录
+target/
+linux-release/
+
+# 子项目
+sol-parser-sdk/
+sol-safekey/
+sol-trade-sdk/
+solana-streamer/

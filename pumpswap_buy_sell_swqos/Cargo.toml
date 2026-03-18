@@ -1,0 +1,36 @@
+[package]
+name = "pumpswap_buy_sell_swqos"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sol-trade-sdk = { path = "../../sol-trade-sdk" }
+solana-sdk = "3.0.0"
+solana-commitment-config = { version = "3.0.0", features = ["serde"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+sol-safekey = { path = "../../sol-safekey" }
+rpassword = "7.0"
+anyhow = "1"
+dotenvy = "0.15"
+# 与 copy-bot 一致：vendored 使 macOS 交叉编译到 Linux 时从源码构建 OpenSSL，无需系统 libssl
+openssl = { version = "0.10.73", features = ["vendored"] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+# 4 并行 codegen：编译明显加快，运行时损耗约 2–5%；1 最慢但略优运行性能
+codegen-units = 4
+panic = "abort"
+strip = true
+incremental = false
+
+# 快速 release：用于本地/CI 试跑，编译快很多，体积与性能略差
+[profile.release-fast]
+inherits = "release"
+opt-level = 2
+lto = false
+codegen-units = 16
+incremental = true
