@@ -122,11 +122,10 @@ NONCE_ACCOUNT=
 # Install sol-safekey
 cargo install sol-safekey
 
-# Run interactive safekey
-sol-safekey
+# Generate encrypted keystore
+sol-safekey gen-keystore
 
-# Select option 2 (Import existing private key and encrypt)
-# Then import your existing keypair
+# Enter password when prompted (10-20 characters recommended)
 ```
 
 **Option 2: Converting existing keypair via solana-keygen**

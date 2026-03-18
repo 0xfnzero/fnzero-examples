@@ -122,11 +122,10 @@ NONCE_ACCOUNT=
 # 安装 sol-safekey
 cargo install sol-safekey
 
-# 运行交互式 safekey
-sol-safekey
+# 生成加密 keystore
+sol-safekey gen-keystore
 
-# 选择选项 2（导入现有私钥并加密）
-# 然后导入你的现有密钥对
+# 按提示输入密码（建议 10-20 位字符）
 ```
 
 **方式 2：使用 solana-keygen 转换现有密钥对**
