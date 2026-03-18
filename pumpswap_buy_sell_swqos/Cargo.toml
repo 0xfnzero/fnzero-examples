@@ -4,14 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-sol-trade-sdk = { path = "/Users/wood/WorkSpace/Solana-Projects/fnzero-examples/sol-trade-sdk" }
+sol-trade-sdk = { path = "../../sol-trade-sdk" }
 solana-sdk = "3.0.0"
 solana-commitment-config = { version = "3.0.0", features = ["serde"] }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_yaml = "0.9"
-sol-safekey = { path = "/Users/wood/WorkSpace/Solana-Projects/fnzero-examples/sol-safekey" }
+sol-safekey = { path = "../../sol-safekey" }
 rpassword = "7.0"
 anyhow = "1"
 dotenvy = "0.15"
