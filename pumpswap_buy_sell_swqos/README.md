@@ -114,53 +114,176 @@ NONCE_ACCOUNT=
 
 ### Wallet Setup
 
-#### Creating keystore.json
+#### Complete Wallet Setup Guide (Recommended)
 
-**Option 1: Using sol-safekey (Recommended)**
+This guide will walk you through setting up everything using **sol-safekey**, including creating keystore.json, unlocking the wallet, creating WSOL ATA, and creating durable nonce accounts.
 
-```bash
-# Install sol-safekey
-cargo install sol-safekey
+##### Step 1: Install sol-safekey
 
-# Generate encrypted keystore
-sol-safekey gen-keystore
-
-# Enter password when prompted (10-20 characters recommended)
-```
-
-**Option 2: Converting existing keypair via solana-keygen**
+**Install from source (Recommended):**
 
 ```bash
-# Generate standard Solana keypair (unencrypted)
-solana-keygen new --outfile keystore.json
+# 1. Clone or navigate to sol-safekey project directory
+cd /path/to/sol-safekey
 
-# Note: Standard keypairs are unencrypted and not recommended for production
+# 2. Build and install with full feature
+cargo install --path . --features="full"
+
+# 3. Verify installation
+sol-safekey --version
 ```
 
-#### Creating Required Accounts
+**Install from crates.io:**
 
-**Note**: The following accounts can be created using **sol-safekey** which provides an interactive interface for all wallet operations.
+```bash
+cargo install sol-safekey --features="full"
+```
 
-**1. WSOL ATA (Wrapped SOL Associated Token Account)**
+##### Step 2: Start Interactive Menu
 
-WSOL ATA is automatically created during the first buy operation. No manual setup required.
+```bash
+sol-safekey start
+```
 
-**2. Durable Nonce Account**
+You will see the language selection screen:
 
-Durable nonce accounts are required when using 2 or more SWQoS services for transaction replay protection.
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Sol-SafeKey - Solana Security Key Management Tool
+  Solana 密钥管理工具
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-You can create durable nonce accounts using **sol-safekey** which supports nonce account creation in its interactive menu. The created nonce address should be added to your configuration:
+Please select language | 请选择语言:
+
+  1. 中文
+  2. English
+
+Select language (1-2): _
+```
+
+Enter `2` to select English.
+
+
+
+##### Step 3: Create keystore.json Wallet
+
+After selecting language, you'll see the main menu:
+
+```
+
+==================================================
+
+==================================================
+  Sol-SafeKey - Solana Key Management Tool
+==================================================
+
+Core Functions (3 operations):
+
+  1.  Create Plaintext Key
+  2.  Create Encrypted Key (bot)
+  3.  Decrypt Key
+
+  🔒 Wallet Status: Unlocked
+  U.  Unlock Wallet (for Solana Operations)
+
+  Advanced Security Features:
+  4.  Setup 2FA Authentication
+  5.  Generate Triple-Factor Wallet
+  6.  Unlock Triple-Factor Wallet
+
+  Solana On-Chain Operations:
+  7.  Check SOL Balance
+  8.  Transfer SOL
+  9.  Create WSOL ATA
+  10.  Wrap SOL → WSOL
+  11.  Unwrap WSOL → SOL
+  12.  Close WSOL ATA
+  13.  Transfer SPL Token
+  14.  Create Nonce Account
+  15.  Pump.fun Sell Token
+  16.  PumpSwap Sell Token
+  17.  Pump.fun Cashback (View & Claim)
+  18.  PumpSwap Cashback (View & Claim)
+
+  0.  Exit
+
+Select operation (0-18/U): _
+```
+
+==================================================
+  Sol-SafeKey - Solana Key Management Tool
+==================================================
+
+Core Functions (3 operations):
+
+  1.  Create Plaintext Key
+  2.  Create Encrypted Key (bot)
+  3.  Decrypt Key
+
+  🔒 Wallet Status: Unlocked
+  U.  Unlock Wallet (for Solana Operations)
+
+  Advanced Security Features:
+  4.  Setup 2FA Authentication
+  5.  Generate Triple-Factor Wallet
+  6.  Unlock Triple-Factor Wallet
+
+  Solana On-Chain Operations:
+  7.  Check SOL Balance
+  8.  Transfer SOL
+  9.  Create WSOL ATA
+  10.  Wrap SOL → WSOL
+  11.  Unwrap WSOL → SOL
+  12.  Close WSOL ATA
+  13.  Transfer SPL Token
+  14.  Create Nonce Account
+  15.  Pump.fun Sell Token
+  16.  PumpSwap Sell Token
+  17.  Pump.fun Cashback (View & Claim)
+  18.  PumpSwap Cashback (View & Claim)
+
+  0.  Exit
+
+Select operation (0-18/U): _
+```
+**Important Note**: Since you haven't created a wallet yet, you need to **unlock wallet** or **create a new wallet** first.
+
+**Steps to Create New Wallet:**
+1. Select `1. Create Plaintext Key`
+2. Follow prompts to generate keypair
+3. Follow prompts to save to file
+
+**Steps to Encrypt Existing Key:**
+1. Select `2. Create Encrypted Key`
+2. Enter or paste existing private key
+3. Enter password when prompted
+4. Enter password to confirm
+5. Select filename to save (default: keystore.json)
+
+**Steps to Unlock Wallet:**
+1. Select `U` Unlock Wallet
+2. Enter keystore file path when prompted (default: keystore.json)
+3. Enter password
+
+
+
+##### Step 7: Configure Nonce Account
+
+Add the nonce account address created above to your configuration file:
 
 ```yaml
 # config/dev/solana.yaml or config/prod/solana.yaml
 nonce_config:
   buy_nonce_accounts:
-    - "YOUR_NONCE_PUBKEY_HERE"
+    - "5xKm...7xW3"  # Use the actual created address
   sell_nonce_accounts:
-    - "YOUR_NONCE_PUBKEY_HERE"
+    - "5xKm...7xW3"  # Can use the same, or create different ones
 ```
 
-**Note**: You can use separate nonce accounts for buy and sell, or use the same one.
+**Notes:**
+- WSOL ATA is automatically created during the first buy operation, no manual setup required
+- When using 2 or more SWQoS services, durable nonce accounts are required
+- You can use separate nonce accounts for buy and sell operations, or use the same one
 
 ### Config Files
 
