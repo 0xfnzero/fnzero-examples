@@ -112,6 +112,70 @@ SWQOS_ZEROSLOT_TOKEN=
 NONCE_ACCOUNT=
 ```
 
+### 钱包设置
+
+#### 创建 keystore.json
+
+**方式 1：使用 sol-safekey（推荐）**
+
+```bash
+# 安装 sol-safekey
+cargo install sol-safekey
+
+# 生成加密 keystore
+sol-safekey new keystore.json
+
+# 按提示输入密码（建议 10-20 位字符）
+```
+
+**方式 2：转换现有密钥对**
+
+```bash
+# 从 base58 私钥转换
+echo "your_base58_private_key" > key.txt
+sol-safekey import key.txt keystore.json
+
+# 从 JSON 数组（64 字节）转换
+cat keypair.json | sol-safekey import - keystore.json
+```
+
+#### 创建必需账户
+
+**1. WSOL ATA（Wrapped SOL 关联代币账户）**
+
+WSOL ATA 会在首次买入操作时自动创建，无需手动设置。
+
+**2. Durable Nonce 账户**
+
+使用 2 个及以上 SWQoS 服务时，需要创建 Durable Nonce 账户以实现交易重放保护。
+
+```bash
+# 安装 Solana CLI
+sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+
+# 生成 durable nonce 密钥对
+solana-keygen new --outfile nonce-keypair.json
+
+# 创建 nonce 账户
+solana create-nonce-account nonce-keypair.json
+
+# 获取 nonce 地址
+solana-keygen pubkey nonce-keypair.json
+```
+
+将 nonce 地址添加到配置文件：
+
+```yaml
+# config/dev/solana.yaml 或 config/prod/solana.yaml
+nonce_config:
+  buy_nonce_accounts:
+    - "YOUR_NONCE_PUBKEY_HERE"
+  sell_nonce_accounts:
+    - "YOUR_NONCE_PUBKEY_HERE"
+```
+
+**注意**：可以为买入和卖出使用不同的 nonce 账户，也可以使用同一个。
+
 ### 配置文件
 
 配置文件组织在 `config/` 目录中：

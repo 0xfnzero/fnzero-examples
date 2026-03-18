@@ -112,6 +112,70 @@ SWQOS_ZEROSLOT_TOKEN=
 NONCE_ACCOUNT=
 ```
 
+### Wallet Setup
+
+#### Creating keystore.json
+
+**Option 1: Using sol-safekey (Recommended)**
+
+```bash
+# Install sol-safekey
+cargo install sol-safekey
+
+# Generate encrypted keystore
+sol-safekey new keystore.json
+
+# Enter password when prompted (10-20 characters recommended)
+```
+
+**Option 2: Converting existing keypair**
+
+```bash
+# From base58 private key
+echo "your_base58_private_key" > key.txt
+sol-safekey import key.txt keystore.json
+
+# From JSON array (64 bytes)
+cat keypair.json | sol-safekey import - keystore.json
+```
+
+#### Creating Required Accounts
+
+**1. WSOL ATA (Wrapped SOL Associated Token Account)**
+
+WSOL ATA is automatically created during the first buy operation. No manual setup required.
+
+**2. Durable Nonce Account**
+
+Durable nonce accounts are required when using 2 or more SWQoS services for transaction replay protection.
+
+```bash
+# Install Solana CLI
+sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+
+# Generate durable nonce keypair
+solana-keygen new --outfile nonce-keypair.json
+
+# Create nonce account
+solana create-nonce-account nonce-keypair.json
+
+# Get nonce address
+solana-keygen pubkey nonce-keypair.json
+```
+
+Add the nonce address to your configuration:
+
+```yaml
+# config/dev/solana.yaml or config/prod/solana.yaml
+nonce_config:
+  buy_nonce_accounts:
+    - "YOUR_NONCE_PUBKEY_HERE"
+  sell_nonce_accounts:
+    - "YOUR_NONCE_PUBKEY_HERE"
+```
+
+**Note**: You can use separate nonce accounts for buy and sell, or use the same one.
+
 ### Config Files
 
 Configuration is organized in `config/` directory:

@@ -47,7 +47,8 @@ async fn main() -> anyhow::Result<()> {
     let config_path = resolve_config_path();
     let trading_path = {
         let config_dir = Path::new(&config_path).parent().unwrap_or_else(|| Path::new("."));
-        config_dir.join("trading.yaml").to_str().unwrap_or("trading.yaml".to_string())
+        let path = config_dir.join("trading.yaml");
+        path.to_str().unwrap_or("trading.yaml").to_string()
     };
 
     let (mut rpc_url, swqos_configs, keystore_path, nonce_config, trading_config) =
