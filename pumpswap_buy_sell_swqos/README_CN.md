@@ -122,21 +122,20 @@ NONCE_ACCOUNT=
 # 安装 sol-safekey
 cargo install sol-safekey
 
-# 生成加密 keystore
-sol-safekey new keystore.json
+# 运行交互式 safekey
+sol-safekey
 
-# 按提示输入密码（建议 10-20 位字符）
+# 选择选项 2（导入现有私钥并加密）
+# 然后导入你的现有密钥对
 ```
 
-**方式 2：转换现有密钥对**
+**方式 2：使用 solana-keygen 转换现有密钥对**
 
 ```bash
-# 从 base58 私钥转换
-echo "your_base58_private_key" > key.txt
-sol-safekey import key.txt keystore.json
+# 生成标准 Solana 密钥对（未加密）
+solana-keygen new --outfile keystore.json
 
-# 从 JSON 数组（64 字节）转换
-cat keypair.json | sol-safekey import - keystore.json
+# 注意：标准密钥对是未加密的，不建议用于生产环境
 ```
 
 #### 创建必需账户

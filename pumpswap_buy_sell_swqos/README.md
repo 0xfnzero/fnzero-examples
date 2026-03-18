@@ -122,21 +122,20 @@ NONCE_ACCOUNT=
 # Install sol-safekey
 cargo install sol-safekey
 
-# Generate encrypted keystore
-sol-safekey new keystore.json
+# Run interactive safekey
+sol-safekey
 
-# Enter password when prompted (10-20 characters recommended)
+# Select option 2 (Import existing private key and encrypt)
+# Then import your existing keypair
 ```
 
-**Option 2: Converting existing keypair**
+**Option 2: Converting existing keypair via solana-keygen**
 
 ```bash
-# From base58 private key
-echo "your_base58_private_key" > key.txt
-sol-safekey import key.txt keystore.json
+# Generate standard Solana keypair (unencrypted)
+solana-keygen new --outfile keystore.json
 
-# From JSON array (64 bytes)
-cat keypair.json | sol-safekey import - keystore.json
+# Note: Standard keypairs are unencrypted and not recommended for production
 ```
 
 #### Creating Required Accounts
