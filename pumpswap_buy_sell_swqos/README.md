@@ -140,6 +140,8 @@ solana-keygen new --outfile keystore.json
 
 #### Creating Required Accounts
 
+**Note**: The following accounts can be created using **sol-safekey** which provides an interactive interface for all wallet operations.
+
 **1. WSOL ATA (Wrapped SOL Associated Token Account)**
 
 WSOL ATA is automatically created during the first buy operation. No manual setup required.
@@ -148,21 +150,7 @@ WSOL ATA is automatically created during the first buy operation. No manual setu
 
 Durable nonce accounts are required when using 2 or more SWQoS services for transaction replay protection.
 
-```bash
-# Install Solana CLI
-sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
-
-# Generate durable nonce keypair
-solana-keygen new --outfile nonce-keypair.json
-
-# Create nonce account
-solana create-nonce-account nonce-keypair.json
-
-# Get nonce address
-solana-keygen pubkey nonce-keypair.json
-```
-
-Add the nonce address to your configuration:
+You can create durable nonce accounts using **sol-safekey** which supports nonce account creation in its interactive menu. The created nonce address should be added to your configuration:
 
 ```yaml
 # config/dev/solana.yaml or config/prod/solana.yaml

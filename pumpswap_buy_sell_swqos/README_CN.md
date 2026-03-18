@@ -140,6 +140,8 @@ solana-keygen new --outfile keystore.json
 
 #### 创建必需账户
 
+**注意**：以下账户可以使用 **sol-safekey** 创建，它提供了用于所有钱包操作的交互式界面。
+
 **1. WSOL ATA（Wrapped SOL 关联代币账户）**
 
 WSOL ATA 会在首次买入操作时自动创建，无需手动设置。
@@ -148,21 +150,7 @@ WSOL ATA 会在首次买入操作时自动创建，无需手动设置。
 
 使用 2 个及以上 SWQoS 服务时，需要创建 Durable Nonce 账户以实现交易重放保护。
 
-```bash
-# 安装 Solana CLI
-sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
-
-# 生成 durable nonce 密钥对
-solana-keygen new --outfile nonce-keypair.json
-
-# 创建 nonce 账户
-solana create-nonce-account nonce-keypair.json
-
-# 获取 nonce 地址
-solana-keygen pubkey nonce-keypair.json
-```
-
-将 nonce 地址添加到配置文件：
+您可以使用 **sol-safekey** 创建 durable nonce 账户（在其交互式菜单中支持 nonce 账户创建）。创建的 nonce 地址应添加到配置文件：
 
 ```yaml
 # config/dev/solana.yaml 或 config/prod/solana.yaml
