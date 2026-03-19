@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # =============================================================================
-# 服务器用：直接运行已编译的 pumpswap_buy_sell_swqos 二进制（不调用 cargo）
+# 服务器用：直接运行已编译的 pumpswap_trade 二进制（不调用 cargo）
 # =============================================================================
-# 用法（在部署目录 ~/pumpswap_buy_sell_swqos 下）:
+# 用法（在部署目录 ~/pumpswap_trade 下）:
 #   ./startup-linux.sh              # 交互输入 mint 或回车用默认
 #   ./startup-linux.sh <MINT>       # 指定 mint
 #   APP_ENV=prod ./startup-linux.sh <MINT>
 #
-# 环境变量: APP_ENV, MINT, KEYSTORE_PASSWORD, SOLANA_RPC_URL 等同 run.sh
+# 环境变量: APP_ENV, MINT, PRIVATE_KEY, SOLANA_RPC_URL 等同 run.sh
 # =============================================================================
 
 DEFAULT_MINT="Cm6fNnMk7NfzStP9CZpsQA2v3jjzbcYGAxdJySmHpump"
-BINARY_NAME="pumpswap_buy_sell_swqos"
+BINARY_NAME="pumpswap_trade"
 
 set -euo pipefail
 
@@ -32,13 +32,6 @@ if [ "$APP_ENV" = "prod" ] || [ "$APP_ENV" = "production" ]; then
     CONFIG_DIR="config/prod"
 else
     CONFIG_DIR="config/dev"
-fi
-
-KEYSTORE_FILE="${SCRIPT_DIR}/keystore.json"
-if [ ! -f "$KEYSTORE_FILE" ]; then
-    echo "错误: 未找到 keystore.json（请将 keystore.json 放在本目录下）"
-    echo "  路径: $KEYSTORE_FILE"
-    exit 1
 fi
 
 if [ ! -f "$CONFIG_DIR/solana.yaml" ]; then
@@ -68,7 +61,7 @@ if [ ! -x "$SCRIPT_DIR/$BINARY_NAME" ]; then
     exit 1
 fi
 
-echo "环境: APP_ENV=$APP_ENV  配置: $CONFIG_DIR  keystore: $KEYSTORE_FILE  MINT: $MINT"
+echo "环境: APP_ENV=$APP_ENV  配置: $CONFIG_DIR  MINT: $MINT"
 echo ""
 
 exec "$SCRIPT_DIR/$BINARY_NAME" "$MINT"

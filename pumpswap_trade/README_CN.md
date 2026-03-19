@@ -38,6 +38,7 @@
 - [📦 安装](#-安装)
 - [🛠️ 配置](#️-配置)
   - [环境变量](#环境变量)
+  - [钱包设置](#钱包设置)
   - [配置文件](#配置文件)
   - [SWQoS 服务](#swqos-服务)
 - [🚀 使用方法](#-使用方法)
@@ -64,7 +65,7 @@
 
 ```bash
 git clone https://github.com/0xfnzero/fnzero-examples.git
-cd fnzero-examples/pumpswap_buy_sell_swqos
+cd fnzero-examples/pumpswap_trade
 ```
 
 ### 依赖项
@@ -89,8 +90,8 @@ APP_ENV=prod
 # 代币 mint 地址（也可作为命令行参数传入）
 MINT=
 
-# Keystore 密码（可选，不设置则交互输入）
-KEYSTORE_PASSWORD=
+# 钱包私钥（支持 base58 或标准 64 字节数组 JSON 格式）
+PRIVATE_KEY=
 
 # RPC 地址
 SOLANA_RPC_URL=http://your-rpc-endpoint.com
@@ -114,246 +115,39 @@ NONCE_ACCOUNT=
 
 ### 钱包设置
 
-#### 完整的钱包设置教程（推荐）
+本项目支持直接配置私钥。你可以通过以下两种方式配置钱包：
 
-本教程将带你使用 **sol-safekey** 完成所有钱包设置，包括创建 keystore.json、解锁钱包、创建 WSOL ATA 和创建 durable nonce 账户。
+#### 方式一：使用 .env 文件（推荐）
 
-##### 步骤 1：安装 sol-safekey
-
-**从源码编译安装（推荐）：**
-
-```bash
-# 1. 克隆或进入 sol-safekey 项目目录
-cd /path/to/sol-safekey
-
-# 2. 使用 full feature 编译并安装
-cargo install --path . --features="full"
-
-# 3. 验证安装
-sol-safekey --version
-```
-
-**从 crates.io 安装：**
+1. 复制 `.env.example` 为 `.env`
+2. 将你的私钥添加到 `PRIVATE_KEY` 变量
 
 ```bash
-cargo install sol-safekey --features="full"
+cp .env.example .env
 ```
 
-##### 步骤 2：启动交互式菜单
-
+编辑 `.env`：
 ```bash
-sol-safekey start
+PRIVATE_KEY=你的私钥
 ```
 
-你将看到语言选择界面：
+**私钥格式支持：**
+- **Base58 格式**：标准的 Solana 私钥字符串（例如来自 `solana-keygen new`）
+- **64 字节数组 JSON**：某些钱包导出的 `[1,2,3,...64]` 格式
 
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Sol-SafeKey - Solana 密钥管理工具
-  Solana Security Key Management Tool
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#### 方式二：使用配置文件
 
-Please select language | 请选择语言:
-
-  1. 中文
-  2. English
-
-Select language (1-2): _
-```
-
-输入 `2` 选择中文。
-
-
-
-##### 步骤 3：创建 keystore.json 钱包
-
-选择语言后，进入主菜单：
-
-```
-
-==================================================
-  Sol-SafeKey - Solana 密钥管理工具
-==================================================
-
-核心功能 (只需3个操作):
-
-  1.  创建明文私钥
-  2.  创建加密私钥(bot)
-  3.  解密私钥
-
-  🔒 钱包状态: 未解锁
-  U.  解锁钱包（用于Solana操作）
-
-  高级安全功能:
-  4.  设置 2FA 认证
-  5.  生成三因子钱包
-  6.  解锁三因子钱包
-
-  Solana 链上操作:
-  7.  查询 SOL 余额
-  8.  转账 SOL
-  9.  创建 WSOL ATA
-  10.  包装 SOL → WSOL
-  11.  解包 WSOL → SOL
-  12.  关闭 WSOL ATA
-  13.  转账 SPL 代币
-  14.  创建 Nonce 账户
-  15.  Pump.fun 卖出代币
-  16.  PumpSwap 卖出代币
-  17.  Pump.fun 返现（查看与领取）
-  18.  PumpSwap 返现（查看与领取）
-
-  0.  退出
-
-选择操作 (0-18/U): _
-```
-
-**重要提示**：由于你还没有创建钱包，首先需要**解锁钱包**或**创建新钱包**。
-
-**创建新钱包的步骤：**
-1. 选择 `1. 创建明文私钥`
-2. 按提示生成密钥对
-3. 按提示保存到文件
-
-**加密现有私钥的步骤：**
-1. 选择 `2. 创建加密私钥`
-2. 输入或粘贴现有私钥
-3. 按提示输入密码
-4. 按提示输入密码确认
-5. 选择保存文件名（默认 keystore.json）
-
-**解锁钱包的步骤：**
-1. 选择 `U` 解锁钱包
-2. 按提示输入 keystore 文件路径（默认 keystore.json）
-3. 按提示输入密码
-
-
-密码强度验证通过！✅
-
-正在加密私钥...
-✅ 钱包已保存: keystore.json
-
-📝 重要提醒:
-   • 密码请妥善保管，丢失无法恢复！
-   • keystore.json 文件包含了加密后的私钥
-   • 建议将 keystore.json 备份到多个安全位置
-```
-
-##### 步骤 4：解锁钱包
-
-返回主菜单，输入 `U` 解锁钱包：
-
-```
-请选择操作 (1-6/U/Q): U
-```
-
-**操作步骤：**
-1. 系统会提示输入 keystore 文件路径（默认为 `keystore.json`）
-2. 直接回车使用默认路径
-3. 输入之前设置的密码
-4. 解锁成功后，钱包将保存在会话中
-
-**示例输出：**
-
-```
-  解锁钱包
-Keystore 文件路径 [keystore.json]:
-
-请输入密码: ********
-
-✅ 钱包解锁成功！
-📍 当前钱包: 7xKm...9xW3
-```
-
-##### 步骤 5：创建 WSOL ATA 账号
-
-解锁钱包后，选择 `4` 进入 Solana 操作菜单：
-
-```
-请选择操作 (1-6/U/Q): 4
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-              Solana 操作菜单 | Solana Operations
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  1.  查询余额 (查询余额)
-  2.  创建 WSOL ATA (创建 WSOL ATA)
-  3.  SOL ⟷ WSOL (打包 SOL)
-  4.  WSOL ⟷ SOL (解包 WSOL)
-  5.  创建 Nonce 账户 (创建 Nonce 账户)
-  B.  返回 (返回)
-
-请选择操作 (1-5/B): _
-```
-
-**操作步骤：**
-1. 输入 `2` 并回车
-2. 系统会自动创建 WSOL Associated Token Account
-3. 等待交易确认
-
-**示例输出：**
-
-```
-📝 创建 WSOL ATA
-
-🚀 正在创建 WSOL Associated Token Account...
-✅ WSOL ATA 创建成功！
-
-📍 ATA 地址: 7xKm...9xW3
-📊 Token Mint: So11111111111111111111111111111111111111111112
-
-Signature: 5xKm...9xW3
-Explorer: https://solscan.io/tx/5xKm...9xW3
-```
-
-##### 步骤 6：创建 Durable Nonce 账号
-
-返回 Solana 操作菜单，输入 `5` 创建 Nonce 账号：
-
-```
-请选择操作 (1-5/B): 5
-
-🔑 创建 Nonce 账户
-
-ℹ️  A nonce account will be created for durable transactions
-ℹ️  将创建一个用于持久交易的 Nonce 账户
-```
-
-**操作步骤：**
-1. 系统会自动创建一个新的 nonce 账号
-2. nonce 账号用于确保交易的幂等性和防止重放攻击
-3. 等待交易确认
-4. **重要**：记录创建的 nonce 账户地址，用于配置文件
-
-**示例输出：**
-
-```
-🚀 正在创建 Nonce 账户...
-
-✅ Nonce 账户创建和初始化成功！
-   📍 地址: 5xKm...7xW3
-   🔐 Nonce值: 1234abcd...efgh5678
-
-💡 请保存此 Nonce 账户地址以供将来使用！
-```
-
-##### 步骤 7：配置 Nonce 账户
-
-将上面创建的 nonce 账户地址添加到配置文件：
+你也可以直接在配置文件中设置私钥：
 
 ```yaml
 # config/dev/solana.yaml 或 config/prod/solana.yaml
-nonce_config:
-  buy_nonce_accounts:
-    - "5xKm...7xW3"  # 使用实际创建的地址
-  sell_nonce_accounts:
-    - "5xKm...7xW3"  # 可以使用同一个，或创建不同的
+private_key: "你的私钥"
 ```
 
-**注意**：
-- WSOL ATA 会在首次买入操作时自动创建，无需手动设置
-- 使用 2 个及以上 SWQoS 服务时，必须配置 durable nonce 账户
-- 可以为买入和卖出使用不同的 nonce 账户，也可以使用同一个
+**安全提示：**
+- 永远不要将 `.env` 文件提交到版本控制
+- 在生产环境中使用环境变量以获得更好的安全性
+- 妥善保管你的私钥，切勿泄露
 
 ### 配置文件
 
@@ -362,7 +156,7 @@ nonce_config:
 ```
 config/
 ├── dev/
-│   ├── solana.yaml      # RPC、keystore、SWQoS、nonce 配置
+│   ├── solana.yaml      # RPC、私钥、SWQoS、nonce 配置
 │   └── trading.yaml    # 交易参数、gas 费设置
 └── prod/
     ├── solana.yaml
@@ -399,31 +193,39 @@ config/
 ### 使用命令行参数运行
 
 ```bash
-./pumpswap_buy_sell_swqos <MINT_ADDRESS>
+./pumpswap_trade <MINT_ADDRESS>
 ```
 
 ### 使用环境变量运行
 
 ```bash
-MINT=<MINT_ADDRESS> ./pumpswap_buy_sell_swqos
+MINT=<MINT_ADDRESS> ./pumpswap_trade
 ```
 
 ### 使用 .env 文件运行
 
 ```bash
 # 在 .env 中设置 MINT 或作为参数传入
-./pumpswap_buy_sell_swqos
+./pumpswap_trade
 ```
 
 ### 使用不同环境运行
 
 ```bash
-APP_ENV=prod ./pumpswap_buy_sell_swqos <MINT_ADDRESS>
+APP_ENV=prod ./pumpswap_trade <MINT_ADDRESS>
 ```
 
 ---
 
 ## 🔧 构建
+
+### 本地开发构建
+
+```bash
+cargo build --release
+```
+
+二进制文件将生成在 `target/release/pumpswap_trade`
 
 ### 构建 Linux Release
 
@@ -438,7 +240,7 @@ APP_ENV=prod ./pumpswap_buy_sell_swqos <MINT_ADDRESS>
 输出：
 ```
 linux-release/
-├── x86_64-unknown-linux-gnu/release/pumpswap_buy_sell_swqos
+├── x86_64-unknown-linux-gnu/release/pumpswap_trade
 └── deploy.tar.gz
 ```
 

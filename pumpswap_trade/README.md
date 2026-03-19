@@ -38,6 +38,7 @@
 - [📦 Installation](#-installation)
 - [🛠️ Configuration](#️-configuration)
   - [Environment Variables](#environment-variables)
+  - [Wallet Setup](#wallet-setup)
   - [Config Files](#config-files)
   - [SWQoS Services](#swqos-services)
 - [🚀 Usage](#-usage)
@@ -64,7 +65,7 @@
 
 ```bash
 git clone https://github.com/0xfnzero/fnzero-examples.git
-cd fnzero-examples/pumpswap_buy_sell_swqos
+cd fnzero-examples/pumpswap_trade
 ```
 
 ### Dependencies
@@ -89,8 +90,8 @@ APP_ENV=prod
 # Token mint address (can also be passed as CLI argument)
 MINT=
 
-# Keystore password (optional, interactive if not set)
-KEYSTORE_PASSWORD=
+# Wallet private key (supports base58 or standard 64-byte array JSON format)
+PRIVATE_KEY=
 
 # RPC URL
 SOLANA_RPC_URL=http://your-rpc-endpoint.com
@@ -114,179 +115,39 @@ NONCE_ACCOUNT=
 
 ### Wallet Setup
 
-#### Complete Wallet Setup Guide (Recommended)
+This project supports direct private key configuration. You can configure your wallet in two ways:
 
-This guide will walk you through setting up everything using **sol-safekey**, including creating keystore.json, unlocking the wallet, creating WSOL ATA, and creating durable nonce accounts.
+#### Option 1: Using .env File (Recommended)
 
-##### Step 1: Install sol-safekey
-
-**Install from source (Recommended):**
-
-```bash
-# 1. Clone or navigate to sol-safekey project directory
-cd /path/to/sol-safekey
-
-# 2. Build and install with full feature
-cargo install --path . --features="full"
-
-# 3. Verify installation
-sol-safekey --version
-```
-
-**Install from crates.io:**
+1. Copy `.env.example` to `.env`
+2. Add your private key to the `PRIVATE_KEY` variable
 
 ```bash
-cargo install sol-safekey --features="full"
+cp .env.example .env
 ```
 
-##### Step 2: Start Interactive Menu
-
+Edit `.env`:
 ```bash
-sol-safekey start
+PRIVATE_KEY=your_private_key_here
 ```
 
-You will see the language selection screen:
+**Private Key Format Support:**
+- **Base58 format**: Your standard Solana private key string (e.g., from `solana-keygen new`)
+- **64-byte array JSON**: `[1,2,3,...64]` format exported from some wallets
 
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Sol-SafeKey - Solana Security Key Management Tool
-  Solana 密钥管理工具
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#### Option 2: Using Config File
 
-Please select language | 请选择语言:
-
-  1. 中文
-  2. English
-
-Select language (1-2): _
-```
-
-Enter `2` to select English.
-
-
-
-##### Step 3: Create keystore.json Wallet
-
-After selecting language, you'll see the main menu:
-
-```
-
-==================================================
-  Sol-SafeKey - Solana Key Management Tool
-==================================================
-
-Core Functions (3 operations):
-
-  1.  Create Plaintext Key
-  2.  Create Encrypted Key (bot)
-  3.  Decrypt Key
-
-  🔒 Wallet Status: Unlocked
-  U.  Unlock Wallet (for Solana Operations)
-
-  Advanced Security Features:
-  4.  Setup 2FA Authentication
-  5.  Generate Triple-Factor Wallet
-  6.  Unlock Triple-Factor Wallet
-
-  Solana On-Chain Operations:
-  7.  Check SOL Balance
-  8.  Transfer SOL
-  9.  Create WSOL ATA
-  10.  Wrap SOL → WSOL
-  11.  Unwrap WSOL → SOL
-  12.  Close WSOL ATA
-  13.  Transfer SPL Token
-  14.  Create Nonce Account
-  15.  Pump.fun Sell Token
-  16.  PumpSwap Sell Token
-  17.  Pump.fun Cashback (View & Claim)
-  18.  PumpSwap Cashback (View & Claim)
-
-  0.  Exit
-
-Select operation (0-18/U): _
-```
-**Important Note**: Since you haven't created a wallet yet, you need to **unlock wallet** or **create a new wallet** first.
-
-**Steps to Create New Wallet:**
-1. Select `1. Create Plaintext Key`
-2. Follow prompts to generate keypair
-3. Follow prompts to save to file
-
-**Steps to Encrypt Existing Key:**
-1. Select `2. Create Encrypted Key`
-2. Enter or paste existing private key
-3. Enter password when prompted
-4. Enter password to confirm
-5. Select filename to save (default: keystore.json)
-
-**Steps to Unlock Wallet:**
-1. Select `U` Unlock Wallet
-2. Enter keystore file path when prompted (default: keystore.json)
-3. Enter password
-4. After unlock, wallet is stored in session for Solana operations
-
-**Example Output:**
-```
-  Unlock Wallet
-Keystore file path [keystore.json]:
-
-Enter password: ********
-
-✅ Wallet unlocked successfully!
-📍 Current Wallet: 7xKm...9xW3
-```
-
-##### Step 4: Create WSOL ATA
-
-After unlocking wallet, you need to create a WSOL Associated Token Account. However, WSOL ATA is automatically created during the first buy operation, so you don't need to manually create it.
-
-If you want to create it manually for testing:
-
-1. From the main menu, enter the Solana operations
-2. Select "Create WSOL ATA"
-3. System will automatically create WSOL ATA
-
-**Note**: For the pumpswap_buy_sell_swqos example, WSOL ATA is automatically created during the first buy operation, so manual setup is not required.
-
-##### Step 5: Create Durable Nonce Account
-
-Create a nonce account for transaction replay protection (required when using 2+ SWQoS services):
-
-1. From Solana operations menu, select "Create Nonce Account"
-2. System will create a new nonce account
-3. Wait for transaction confirmation
-4. **Important**: Save the created nonce account address for configuration
-
-**Example Output:**
-```
-🚀 Creating Nonce Account...
-
-✅ Nonce account created and initialized successfully!
-   📍 Address: 5xKm...7xW3
-   🔐 Nonce value: 1234abcd...efgh5678
-
-💡 Please save this Nonce account address for future use!
-```
-
-##### Step 6: Configure Nonce Account
-
-Add the nonce account address created above to your configuration file:
+You can also set the private key directly in the config file:
 
 ```yaml
 # config/dev/solana.yaml or config/prod/solana.yaml
-nonce_config:
-  buy_nonce_accounts:
-    - "5xKm...7xW3"  # Use the actual created address
-  sell_nonce_accounts:
-    - "5xKm...7xW3"  # Can use the same, or create different ones
+private_key: "your_private_key_here"
 ```
 
-**Notes:**
-- WSOL ATA is automatically created during the first buy operation, no manual setup required
-- When using 2 or more SWQoS services, durable nonce accounts are required
-- You can use separate nonce accounts for buy and sell operations, or use the same one
+**Security Notes:**
+- Never commit `.env` files to version control
+- Use environment variables in production for better security
+- Keep your private key safe and never share it
 
 ### Config Files
 
@@ -295,7 +156,7 @@ Configuration is organized in `config/` directory:
 ```
 config/
 ├── dev/
-│   ├── solana.yaml      # RPC, keystore, SWQoS, nonce config
+│   ├── solana.yaml      # RPC, private_key, SWQoS, nonce config
 │   └── trading.yaml    # Trading parameters, gas fee settings
 └── prod/
     ├── solana.yaml
@@ -332,31 +193,39 @@ Apply for API keys at: https://fnzero.dev/swqos
 ### Run with CLI Argument
 
 ```bash
-./pumpswap_buy_sell_swqos <MINT_ADDRESS>
+./pumpswap_trade <MINT_ADDRESS>
 ```
 
 ### Run with Environment Variable
 
 ```bash
-MINT=<MINT_ADDRESS> ./pumpswap_buy_sell_swqos
+MINT=<MINT_ADDRESS> ./pumpswap_trade
 ```
 
 ### Using .env File
 
 ```bash
 # Set MINT in .env or pass as argument
-./pumpswap_buy_sell_swqos
+./pumpswap_trade
 ```
 
 ### Using Different Environment
 
 ```bash
-APP_ENV=prod ./pumpswap_buy_sell_swqos <MINT_ADDRESS>
+APP_ENV=prod ./pumpswap_trade <MINT_ADDRESS>
 ```
 
 ---
 
 ## 🔧 Build
+
+### Build for Local Development
+
+```bash
+cargo build --release
+```
+
+The binary will be created at `target/release/pumpswap_trade`
 
 ### Build for Linux Release
 
@@ -371,7 +240,7 @@ This script:
 Output:
 ```
 linux-release/
-├── x86_64-unknown-linux-gnu/release/pumpswap_buy_sell_swqos
+├── x86_64-unknown-linux-gnu/release/pumpswap_trade
 └── deploy.tar.gz
 ```
 

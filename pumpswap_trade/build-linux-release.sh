@@ -5,7 +5,7 @@
 
 set -e
 
-BINARY_NAME="pumpswap_buy_sell_swqos"
+BINARY_NAME="pumpswap_trade"
 TARGET="x86_64-unknown-linux-gnu"
 TARGET_DIR="linux-release"
 DEPLOY_ARCHIVE="deploy.tar.gz"
@@ -37,7 +37,6 @@ cp run.sh "${STAGING_DIR}/"
 cp startup-linux.sh "${STAGING_DIR}/"
 cp -r config "${STAGING_DIR}/"
 [ -f ".env.example" ] && cp .env.example "${STAGING_DIR}/"
-[ -f "keystore.json" ] && cp keystore.json "${STAGING_DIR}/"
 rm -f "${DEPLOY_ARCHIVE}"
 tar -czf "${DEPLOY_ARCHIVE}" -C "${STAGING_DIR}" .
 rm -rf "${STAGING_DIR}"
