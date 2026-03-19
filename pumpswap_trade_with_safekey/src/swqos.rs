@@ -2,7 +2,7 @@
 
 use sol_trade_sdk::{
     common::GasFeeStrategy,
-    swqos::{SwqosConfig, SwqosRegion, SwqosType, TradeType},
+    swqos::{SwqosConfig, SwqosRegion, SwqosTransport, SwqosType, TradeType},
 };
 
 use crate::config::{SolanaConfig, TradingConfig};
@@ -82,7 +82,7 @@ pub fn create_swqos_config(
         "Temporal" => Some(SwqosConfig::Temporal(token, reg, None)),
         "FlashBlock" => Some(SwqosConfig::FlashBlock(token, reg, None)),
         "Node1" => Some(SwqosConfig::Node1(token, reg, None, None)),
-        "BlockRazor" => Some(SwqosConfig::BlockRazor(token, reg, None, Some(sol_trade_sdk::swqos::SwqosTransport::Http))),
+        "BlockRazor" => Some(SwqosConfig::BlockRazor(token, reg, None, Some(SwqosTransport::Http))),
         "Astralane" => Some(SwqosConfig::Astralane(token, reg, None, None)),
         "Stellium" => Some(SwqosConfig::Stellium(token, reg, None)),
         "Lightspeed" => Some(SwqosConfig::Lightspeed(token, reg, None)),
