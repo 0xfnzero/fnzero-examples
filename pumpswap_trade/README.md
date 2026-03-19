@@ -195,7 +195,7 @@ Apply for API keys at: https://fnzero.dev/swqos
 Simply run the script:
 
 ```bash
-./run.sh <MINT_ADDRESS>
+./run.sh
 ```
 
 The script will:

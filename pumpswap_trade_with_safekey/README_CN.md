@@ -401,7 +401,7 @@ config/
 直接运行脚本：
 
 ```bash
-./run.sh <MINT_ADDRESS>
+./run.sh
 ```
 
 脚本会：
