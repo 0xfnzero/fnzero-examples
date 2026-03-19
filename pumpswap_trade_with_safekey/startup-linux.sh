@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # =============================================================================
-# 服务器用：直接运行已编译的 pumpswap_buy_sell_swqos 二进制（不调用 cargo）
+# 服务器用：直接运行已编译的 pumpswap_trade_with_safekey 二进制（不调用 cargo）
 # =============================================================================
-# 用法（在部署目录 ~/pumpswap_buy_sell_swqos 下）:
+# 用法（在部署目录 ~/pumpswap_trade_with_safekey 下）:
 #   ./startup-linux.sh              # 交互输入 mint 或回车用默认
 #   ./startup-linux.sh <MINT>       # 指定 mint
 #   APP_ENV=prod ./startup-linux.sh <MINT>
@@ -11,7 +11,7 @@
 # =============================================================================
 
 DEFAULT_MINT="Cm6fNnMk7NfzStP9CZpsQA2v3jjzbcYGAxdJySmHpump"
-BINARY_NAME="pumpswap_buy_sell_swqos"
+BINARY_NAME="pumpswap_trade_with_safekey"
 
 set -euo pipefail
 

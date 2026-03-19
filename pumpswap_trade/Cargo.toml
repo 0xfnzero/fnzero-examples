@@ -1,5 +1,5 @@
 [package]
-name = "pumpswap_buy_sell_swqos"
+name = "pumpswap_trade"
 version = "0.1.0"
 edition = "2021"
 

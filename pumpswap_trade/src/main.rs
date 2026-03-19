@@ -41,7 +41,7 @@ async fn main() -> anyhow::Result<()> {
     let mint = std::env::args()
         .nth(1)
         .or_else(|| std::env::var("MINT").ok())
-        .expect("用法: pumpswap_buy_sell_swqos <MINT> 或设置 MINT 环境变量");
+        .expect("用法: pumpswap_trade <MINT> 或设置 MINT 环境变量");
 
     let config_path = resolve_config_path();
     let trading_path = {
@@ -194,8 +194,8 @@ fn load_dotenv() {
         if let Ok(exe) = std::env::current_exe() {
             if let Some(p) = exe.parent() {
                 for rel in [
-                    "examples/pumpswap_buy_sell_swqos/.env",
-                    "../../examples/pumpswap_buy_sell_swqos/.env",
+                    "examples/pumpswap_trade/.env",
+                    "../../examples/pumpswap_trade/.env",
                     "../.env",
                     "../../.env",
                 ] {

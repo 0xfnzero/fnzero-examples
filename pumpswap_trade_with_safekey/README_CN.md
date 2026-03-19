@@ -64,7 +64,7 @@
 
 ```bash
 git clone https://github.com/0xfnzero/fnzero-examples.git
-cd fnzero-examples/pumpswap_buy_sell_swqos
+cd fnzero-examples/pumpswap_trade_with_safekey
 ```
 
 ### 依赖项
@@ -399,26 +399,26 @@ config/
 ### 使用命令行参数运行
 
 ```bash
-./pumpswap_buy_sell_swqos <MINT_ADDRESS>
+./pumpswap_trade_with_safekey <MINT_ADDRESS>
 ```
 
 ### 使用环境变量运行
 
 ```bash
-MINT=<MINT_ADDRESS> ./pumpswap_buy_sell_swqos
+MINT=<MINT_ADDRESS> ./pumpswap_trade_with_safekey
 ```
 
 ### 使用 .env 文件运行
 
 ```bash
 # 在 .env 中设置 MINT 或作为参数传入
-./pumpswap_buy_sell_swqos
+./pumpswap_trade_with_safekey
 ```
 
 ### 使用不同环境运行
 
 ```bash
-APP_ENV=prod ./pumpswap_buy_sell_swqos <MINT_ADDRESS>
+APP_ENV=prod ./pumpswap_trade_with_safekey <MINT_ADDRESS>
 ```
 
 ---
@@ -438,7 +438,7 @@ APP_ENV=prod ./pumpswap_buy_sell_swqos <MINT_ADDRESS>
 输出：
 ```
 linux-release/
-├── x86_64-unknown-linux-gnu/release/pumpswap_buy_sell_swqos
+├── x86_64-unknown-linux-gnu/release/pumpswap_trade_with_safekey
 └── deploy.tar.gz
 ```
 

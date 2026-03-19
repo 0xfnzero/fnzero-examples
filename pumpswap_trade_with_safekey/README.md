@@ -64,7 +64,7 @@
 
 ```bash
 git clone https://github.com/0xfnzero/fnzero-examples.git
-cd fnzero-examples/pumpswap_buy_sell_swqos
+cd fnzero-examples/pumpswap_trade_with_safekey
 ```
 
 ### Dependencies
@@ -248,7 +248,7 @@ If you want to create it manually for testing:
 2. Select "Create WSOL ATA"
 3. System will automatically create WSOL ATA
 
-**Note**: For the pumpswap_buy_sell_swqos example, WSOL ATA is automatically created during the first buy operation, so manual setup is not required.
+**Note**: For the pumpswap_trade_with_safekey example, WSOL ATA is automatically created during the first buy operation, so manual setup is not required.
 
 ##### Step 5: Create Durable Nonce Account
 
@@ -332,26 +332,26 @@ Apply for API keys at: https://fnzero.dev/swqos
 ### Run with CLI Argument
 
 ```bash
-./pumpswap_buy_sell_swqos <MINT_ADDRESS>
+./pumpswap_trade_with_safekey <MINT_ADDRESS>
 ```
 
 ### Run with Environment Variable
 
 ```bash
-MINT=<MINT_ADDRESS> ./pumpswap_buy_sell_swqos
+MINT=<MINT_ADDRESS> ./pumpswap_trade_with_safekey
 ```
 
 ### Using .env File
 
 ```bash
 # Set MINT in .env or pass as argument
-./pumpswap_buy_sell_swqos
+./pumpswap_trade_with_safekey
 ```
 
 ### Using Different Environment
 
 ```bash
-APP_ENV=prod ./pumpswap_buy_sell_swqos <MINT_ADDRESS>
+APP_ENV=prod ./pumpswap_trade_with_safekey <MINT_ADDRESS>
 ```
 
 ---
@@ -371,7 +371,7 @@ This script:
 Output:
 ```
 linux-release/
-├── x86_64-unknown-linux-gnu/release/pumpswap_buy_sell_swqos
+├── x86_64-unknown-linux-gnu/release/pumpswap_trade_with_safekey
 └── deploy.tar.gz
 ```
 

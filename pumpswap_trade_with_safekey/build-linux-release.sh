@@ -5,7 +5,7 @@
 
 set -e
 
-BINARY_NAME="pumpswap_buy_sell_swqos"
+BINARY_NAME="pumpswap_trade_with_safekey"
 TARGET="x86_64-unknown-linux-gnu"
 TARGET_DIR="linux-release"
 DEPLOY_ARCHIVE="deploy.tar.gz"

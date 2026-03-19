@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# pumpswap_buy_sell_swqos 运行脚本（需要 keystore.json 钱包）
+# pumpswap_trade_with_safekey 运行脚本（需要 keystore.json 钱包）
 # =============================================================================
 # 用法:
 #   ./run.sh                     # 无参数：交互输入 mint，直接回车则用默认地址
@@ -46,7 +46,7 @@ else
     CONFIG_DIR="config/dev"
 fi
 
-# keystore.json 必须放在本目录 (pumpswap_buy_sell_swqos) 下（写死路径，避免被 .env 覆盖）
+# keystore.json 必须放在本目录 (pumpswap_trade_with_safekey) 下（写死路径，避免被 .env 覆盖）
 KEYSTORE_FILE="${SCRIPT_DIR}/keystore.json"
 if [ ! -f "$KEYSTORE_FILE" ]; then
     echo "错误: 未找到 keystore.json（请将 keystore.json 放在本目录下）"
