@@ -3282,7 +3282,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "pumpswap_buy_sell_swqos"
+name = "pumpswap_trade_with_safekey"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -4138,8 +4138,6 @@ dependencies = [
 [[package]]
 name = "sol-safekey"
 version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "afe6ca79b135603e80356402f060f2f1859ab63b009e06609319eac7c65d4243"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -4157,8 +4155,6 @@ dependencies = [
 [[package]]
 name = "sol-trade-sdk"
 version = "4.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "67f2ea32af1f2c49335da969841c060738e94a4dee2af9e8ab230f5e0156adec"
 dependencies = [
  "anyhow",
  "arc-swap",

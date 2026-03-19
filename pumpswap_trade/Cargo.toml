@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-sol-trade-sdk = "4"
+sol-trade-sdk = { path = "../sol-trade-sdk" }
 solana-sdk = "4"
 solana-commitment-config = { version = "3", features = ["serde"] }
 tokio = { version = "1", features = ["full"] }
