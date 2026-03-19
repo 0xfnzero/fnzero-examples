@@ -1,0 +1,14 @@
+# 钱包与本地配置（勿提交）
+keystore.json
+.env
+.env.*
+!.env.example
+
+# 部署产物与临时目录
+deploy.tar.gz
+.deploy_staging/
+build-cache/
+
+# 日志与系统
+*.log
+.DS_Store
