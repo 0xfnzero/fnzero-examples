@@ -104,21 +104,21 @@ fnzero-examples/
 
 | 服务 | 传输协议 |
 |---------|---------------------|
-| **Astralane** | HTTP, QUIC |
+| **Astralane** | HTTP, QUIC ⚡ |
 | **BlockRazor** | HTTP, gRPC |
 | **Bloxroute** | HTTP |
 | **FlashBlock** | HTTP |
 | **Jito** | HTTP |
 | **NextBlock** | HTTP |
-| **Node1** | HTTP, QUIC |
-| **Speedlanding** | HTTP |
-| **Soyas** | HTTP |
+| **Node1** | HTTP, QUIC ⚡ |
+| **Soyas** | QUIC ⚡ |
+| **Speedlanding** | QUIC ⚡ |
 | **Stellium** | HTTP |
 | **Temporal** | HTTP |
 | **ZeroSlot** | HTTP |
 | **Default** | RPC |
 
-**注意**：QUIC（Quick UDP Internet Connections）相比 HTTP/gRPC 提供更低的延迟。配置 Astralane 或 Node1 时使用 `SwqosTransport::Quic` 可获得最佳性能。
+**注意**：⚡ = QUIC（Quick UDP Internet Connections）相比 HTTP/gRPC 提供更低的延迟。使用 QUIC 的服务（Astralane、Node1、Soyas、Speedlanding）通常提供最佳的交易提交性能。
 
 ---
 

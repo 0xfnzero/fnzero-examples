@@ -104,21 +104,21 @@ Each example supports:
 
 | Service | Transport Protocols |
 |---------|---------------------|
-| **Astralane** | HTTP, QUIC |
+| **Astralane** | HTTP, QUIC ⚡ |
 | **BlockRazor** | HTTP, gRPC |
 | **Bloxroute** | HTTP |
 | **FlashBlock** | HTTP |
 | **Jito** | HTTP |
 | **NextBlock** | HTTP |
-| **Node1** | HTTP, QUIC |
-| **Speedlanding** | HTTP |
-| **Soyas** | HTTP |
+| **Node1** | HTTP, QUIC ⚡ |
+| **Soyas** | QUIC ⚡ |
+| **Speedlanding** | QUIC ⚡ |
 | **Stellium** | HTTP |
 | **Temporal** | HTTP |
 | **ZeroSlot** | HTTP |
 | **Default** | RPC |
 
-**Note**: QUIC (Quick UDP Internet Connections) provides lower latency compared to HTTP/gRPC. Use `SwqosTransport::Quic` when configuring Astralane or Node1 for optimal performance.
+**Note**: ⚡ = QUIC (Quick UDP Internet Connections) provides lower latency compared to HTTP/gRPC. Services using QUIC (Astralane, Node1, Soyas, Speedlanding) typically offer the best transaction submission performance.
 
 ---
 
