@@ -25,6 +25,7 @@ swqos:
     - provider: "BlockRazor"
       api_token: "YOUR_API_TOKEN_HERE"
       enabled: false
+      # transport: "http"  # 可选：http 或 grpc，默认 http（推荐使用 http 避免 gRPC FRAME_SIZE_ERROR）
     - provider: "Jito"
       api_token: "YOUR_API_TOKEN_HERE"
       enabled: false

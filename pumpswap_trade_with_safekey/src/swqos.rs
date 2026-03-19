@@ -2,7 +2,7 @@
 
 use sol_trade_sdk::{
     common::GasFeeStrategy,
-    swqos::{SwqosConfig, SwqosRegion, SwqosType, TradeType},
+    swqos::{SwqosConfig, SwqosRegion, SwqosTransport, SwqosType, TradeType},
 };
 
 use crate::config::{SolanaConfig, TradingConfig};
@@ -36,7 +36,7 @@ pub fn build_swqos_configs(cfg: &SolanaConfig) -> Vec<SwqosConfig> {
         let token = get_provider_token(&p.provider)
             .or_else(|| p.api_token.as_ref().cloned())
             .unwrap_or_default();
-        if let Some(c) = create_swqos_config(&p.provider, token, &region, rpc_url) {
+        if let Some(c) = create_swqos_config(&p.provider, token, &region, rpc_url, &p.transport) {
             out.push(c);
         }
     }
@@ -71,6 +71,7 @@ pub fn create_swqos_config(
     api_token: String,
     region: &SwqosRegion,
     rpc_url: &str,
+    transport: &Option<String>,
 ) -> Option<SwqosConfig> {
     let token = api_token;
     let reg = region.clone();
@@ -82,7 +83,15 @@ pub fn create_swqos_config(
         "Temporal" => Some(SwqosConfig::Temporal(token, reg, None)),
         "FlashBlock" => Some(SwqosConfig::FlashBlock(token, reg, None)),
         "Node1" => Some(SwqosConfig::Node1(token, reg, None, None)),
-        "BlockRazor" => Some(SwqosConfig::BlockRazor(token, reg, None, None)),
+        "BlockRazor" => {
+            // BlockRazor 默认使用 HTTP，如果配置指定了 grpc 则使用 gRPC
+            let transport_mode = match transport.as_deref() {
+                Some("grpc") | Some("gRPC") | Some("GRPC") => None, // None 表示使用默认的 gRPC
+                Some("http") | Some("HTTP") | Some("Http") => Some(SwqosTransport::Http),
+                _ => Some(SwqosTransport::Http), // 默认使用 HTTP
+            };
+            Some(SwqosConfig::BlockRazor(token, reg, None, transport_mode))
+        }
         "Astralane" => Some(SwqosConfig::Astralane(token, reg, None, None)),
         "Stellium" => Some(SwqosConfig::Stellium(token, reg, None)),
         "Lightspeed" => Some(SwqosConfig::Lightspeed(token, reg, None)),

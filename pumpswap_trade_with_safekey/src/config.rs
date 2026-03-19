@@ -31,6 +31,8 @@ pub struct SwqosProviderConfig {
     pub provider: String,
     pub api_token: Option<String>,
     pub enabled: bool,
+    #[serde(default)]
+    pub transport: Option<String>,
 }
 
 #[derive(serde::Deserialize, Default)]
