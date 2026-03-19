@@ -396,6 +396,41 @@ config/
 
 ## 🚀 使用方法
 
+### 使用 run.sh 快速启动（推荐）
+
+使用提供的 `run.sh` 脚本运行交易机器人是最简单的方式：
+
+```bash
+# 使用 mint 地址参数运行
+./run.sh <MINT_ADDRESS>
+
+# 无参数运行（会提示输入 mint，直接回车使用默认值）
+./run.sh
+
+# 使用环境变量运行
+MINT=<MINT_ADDRESS> ./run.sh
+
+# 使用 keystore 密码运行（非交互模式）
+KEYSTORE_PASSWORD=your_password ./run.sh <MINT_ADDRESS>
+
+# 使用生产环境运行
+APP_ENV=prod ./run.sh <MINT_ADDRESS>
+```
+
+**run.sh 脚本特性：**
+- 自动从当前目录或父目录加载 `.env` 文件
+- 支持开发和生产环境（通过 `APP_ENV` 控制）
+- 交互式输入 mint 地址，支持默认值回退
+- 检查当前目录下的 `keystore.json` 文件
+- 如果未设置 `KEYSTORE_PASSWORD`，会提示输入密码
+- 以 release 模式构建和运行，获得最佳性能
+- 自动导出必要的环境变量
+
+**默认 mint 地址**（无参数运行并直接回车时）：
+```
+Cm6fNnMk7NfzStP9CZpsQA2v3jjzbcYGAxdJySmHpump
+```
+
 ### 使用命令行参数运行
 
 ```bash

@@ -190,6 +190,31 @@ Apply for API keys at: https://fnzero.dev/swqos
 
 ## 🚀 Usage
 
+### Quick Start with run.sh (Recommended)
+
+The easiest way to run the trading bot is using the provided `run.sh` script:
+
+```bash
+# Run with mint address as argument
+./run.sh <MINT_ADDRESS>
+
+# Run without arguments (will prompt for mint, press Enter to use default)
+./run.sh
+
+# Run with environment variable
+MINT=<MINT_ADDRESS> ./run.sh
+
+# Run with production environment
+APP_ENV=prod ./run.sh <MINT_ADDRESS>
+```
+
+**Features of run.sh:**
+- Automatically loads `.env` file from current or parent directory
+- Supports both dev and prod environments (controlled by `APP_ENV`)
+- Interactive mint input with default value fallback
+- Builds and runs in release mode for optimal performance
+- Exports necessary environment variables automatically
+
 ### Run with CLI Argument
 
 ```bash
