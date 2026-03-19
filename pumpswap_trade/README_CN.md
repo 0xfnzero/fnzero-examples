@@ -172,17 +172,17 @@ config/
 
 支持以下 SWQoS 服务：
 
-| 服务 | 必需参数 | 官网 |
-|---------|-----------|-------|
-| Astralane | API Key | https://astralane.io |
-| BlockRazor | API Key | https://blockrazor.io |
-| Jito | UUID | https://jito.wtf |
-| NextBlock | API Key | - |
-| Bloxroute | API Key | https://www.bloxroute.com |
-| ZeroSlot | API Key | https://zeroslot.com |
-| Temporal | API Key | https://temporal.cloud |
-| FlashBlock | API Key | - |
-| Node1 | API Key | - |
+| 服务 | 必需参数 |
+|---------|-----------|
+| Astralane | API Key |
+| BlockRazor | API Key |
+| Jito | UUID |
+| NextBlock | API Key |
+| Bloxroute | API Key |
+| ZeroSlot | API Key |
+| Temporal | API Key |
+| FlashBlock | API Key |
+| Node1 | API Key |
 
 申请 API 密钥：https://fnzero.dev/swqos
 
