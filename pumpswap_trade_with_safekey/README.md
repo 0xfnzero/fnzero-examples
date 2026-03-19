@@ -311,17 +311,17 @@ config/
 
 The following SWQoS services are supported:
 
-| Service | Required Param | Website |
-|---------|----------------|----------|
-| Astralane | API Key | https://astralane.io |
-| BlockRazor | API Key | https://blockrazor.io |
-| Jito | UUID | https://jito.wtf |
-| NextBlock | API Key | - |
-| Bloxroute | API Key | https://www.bloxroute.com |
-| ZeroSlot | API Key | https://zeroslot.com |
-| Temporal | API Key | https://temporal.cloud |
-| FlashBlock | API Key | - |
-| Node1 | API Key | - |
+| Service | Required Param |
+|---------|----------------|
+| Astralane | API Key |
+| BlockRazor | API Key |
+| Jito | UUID |
+| NextBlock | API Key |
+| Bloxroute | API Key |
+| ZeroSlot | API Key |
+| Temporal | API Key |
+| FlashBlock | API Key |
+| Node1 | API Key |
 
 Apply for API keys at: https://fnzero.dev/swqos
 
