@@ -76,8 +76,8 @@ fnzero-examples/
 
 | 示例 | 描述 | 运行命令 | 源代码 |
 |---------|-------------|-------------|-------------|
-| **PumpSwap 交易** | PumpSwap 自动化买→等→卖循环交易，可配置轮次和休息间隔 | `cargo run --release --package pumpswap_trade -- <MINT>` | [pumpswap_trade](./pumpswap_trade/) |
-| **PumpSwap 交易（加密）** | 同上，但使用带密码保护的加密密钥库文件 | `cargo run --release --package pumpswap_trade_with_safekey -- <MINT>` | [pumpswap_trade_with_safekey](./pumpswap_trade_with_safekey/) |
+| **PumpSwap 交易** | PumpSwap 自动化买→等→卖循环交易，可配置轮次和休息间隔 | `./run.sh` | [pumpswap_trade](./pumpswap_trade/) |
+| **PumpSwap 交易（加密）** | 同上，但使用带密码保护的加密密钥库文件 | `./run.sh` | [pumpswap_trade_with_safekey](./pumpswap_trade_with_safekey/) |
 
 ### 示例特性
 

@@ -76,8 +76,8 @@ fnzero-examples/
 
 | Example | Description | Run Command | Source Code |
 |---------|-------------|-------------|-------------|
-| **PumpSwap Trading** | Automated buy→wait→sell loop trading on PumpSwap with configurable rounds and rest intervals | `cargo run --release --package pumpswap_trade -- <MINT>` | [pumpswap_trade](./pumpswap_trade/) |
-| **PumpSwap Trading (Encrypted)** | Same as above, but uses encrypted keystore file with password protection | `cargo run --release --package pumpswap_trade_with_safekey -- <MINT>` | [pumpswap_trade_with_safekey](./pumpswap_trade_with_safekey/) |
+| **PumpSwap Trading** | Automated buy→wait→sell loop trading on PumpSwap with configurable rounds and rest intervals | `./run.sh` | [pumpswap_trade](./pumpswap_trade/) |
+| **PumpSwap Trading (Encrypted)** | Same as above, but uses encrypted keystore file with password protection | `./run.sh` | [pumpswap_trade_with_safekey](./pumpswap_trade_with_safekey/) |
 
 ### Example Features
 
