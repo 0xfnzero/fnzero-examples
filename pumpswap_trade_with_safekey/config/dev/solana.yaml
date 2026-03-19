@@ -12,40 +12,40 @@ lookup_table_account: ""
 # Durable Nonce 账户：买卖可共用或分设；本示例仅通过 RPC 获取 nonce，无 gRPC 订阅
 nonce_config:
   buy_nonce_accounts:
-    - ""
+    - "8PpARucvv4zmJGgLeis5bkDrymTHRCetbkZMpNPbCgLe"
   sell_nonce_accounts:
-    - ""
+    - "FtTqwKADuc4we2xKUEFWrMadpRTLwt8SLFfu9353kFxk"
 
 swqos:
   region: "Frankfurt"
   enabled_providers:
     - provider: "Astralane"
-      api_token: ""
-      enabled: false
+      api_token: "clienAigpDTkMzcAa39FqYi12DXdSduP6gHuygyrlUPPsOvD1n7Ud692j2WsM10j"
+      enabled: true
     - provider: "BlockRazor"
-      api_token: ""
-      enabled: false
+      api_token: "DC8FAcSkOyIyOiTJR93XXdRoI2IkwPRSJUlUgwAgRWlLjC22pE9Tq714vyYdgAjp4uskQvInmKY7gM5kEPcfblNFhxGxK42V"
+      enabled: true
     - provider: "Jito"
       api_token: ""
       enabled: false
     - provider: "NextBlock"
-      api_token: ""
+      api_token: "entry1762967821-rNIXyQe%2FBZynl4TWvVQ3z4wY2R%2BBxu3HEBUUiOa6WMk%3D"
       enabled: false
     - provider: "Bloxroute"
       api_token: ""
       enabled: false
     - provider: "ZeroSlot"
-      api_token: ""
-      enabled: false
+      api_token: "da6a539318f84e7ca381b74afa12cfc9"
+      enabled: true
     - provider: "Temporal"
-      api_token: ""
-      enabled: false
+      api_token: "298b5025-d944-4584-ab1c-91872a055323"
+      enabled: true
     - provider: "FlashBlock"
-      api_token: ""
-      enabled: false
+      api_token: "30acd8201cf946d2"
+      enabled: true
     - provider: "Node1"
-      api_token: ""
-      enabled: false
+      api_token: "b636caba-e4a0-420b-866b-eb6676cd070f"
+      enabled: true
     - provider: "Default"
       api_token: null
-      enabled: false
+      enabled: true
