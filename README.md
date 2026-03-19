@@ -118,6 +118,8 @@ Each example supports:
 | **ZeroSlot** | HTTP |
 | **Default** | RPC |
 
+**API Key Application**: Apply for API keys through the official website: [https://fnzero.dev/swqos](https://fnzero.dev/swqos)
+
 **Note**: ⚡ = QUIC (Quick UDP Internet Connections) provides lower latency compared to HTTP/gRPC. Services using QUIC (Astralane, Node1, Soyas, Speedlanding) typically offer the best transaction submission performance.
 
 ---
