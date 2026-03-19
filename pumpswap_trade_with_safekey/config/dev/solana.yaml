@@ -21,7 +21,7 @@ swqos:
   enabled_providers:
     - provider: "Astralane"
       api_token: "clienAigpDTkMzcAa39FqYi12DXdSduP6gHuygyrlUPPsOvD1n7Ud692j2WsM10j"
-      enabled: true
+      enabled: false
     - provider: "BlockRazor"
       api_token: "DC8FAcSkOyIyOiTJR93XXdRoI2IkwPRSJUlUgwAgRWlLjC22pE9Tq714vyYdgAjp4uskQvInmKY7gM5kEPcfblNFhxGxK42V"
       enabled: true
@@ -39,13 +39,13 @@ swqos:
       enabled: true
     - provider: "Temporal"
       api_token: "298b5025-d944-4584-ab1c-91872a055323"
-      enabled: true
+      enabled: false
     - provider: "FlashBlock"
       api_token: "30acd8201cf946d2"
-      enabled: true
+      enabled: false
     - provider: "Node1"
       api_token: "b636caba-e4a0-420b-866b-eb6676cd070f"
-      enabled: true
+      enabled: false
     - provider: "Default"
       api_token: null
-      enabled: true
+      enabled: false
