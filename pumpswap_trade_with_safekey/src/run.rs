@@ -19,8 +19,8 @@ use crate::swqos::build_gas_fee_strategy;
 
 /// 每轮：买入后休息秒数、卖出后休息秒数
 const REST_SECS: u64 = 30;
-/// 买→休息→卖→休息 的循环次数（最多 3 轮）
-const ROUNDS: u32 = 3;
+/// 买→休息→卖→休息 的循环次数
+const ROUNDS: u32 = 1;
 
 pub const fn rest_secs() -> u64 { REST_SECS }
 pub const fn rounds() -> u32 { ROUNDS }
