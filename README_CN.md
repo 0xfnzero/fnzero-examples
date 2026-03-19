@@ -102,19 +102,23 @@ fnzero-examples/
 
 #### 支持的 SWQoS 服务
 
-- Astralane（HTTP & QUIC）
-- BlockRazor
-- Bloxroute
-- FlashBlock
-- Jito
-- NextBlock
-- Node1
-- Speedlanding
-- Soyas
-- Stellium
-- Temporal
-- ZeroSlot
-- Default（RPC）
+| 服务 | 传输协议 |
+|---------|---------------------|
+| **Astralane** | HTTP, QUIC |
+| **BlockRazor** | HTTP, gRPC |
+| **Bloxroute** | HTTP |
+| **FlashBlock** | HTTP |
+| **Jito** | HTTP |
+| **NextBlock** | HTTP |
+| **Node1** | HTTP, QUIC |
+| **Speedlanding** | HTTP |
+| **Soyas** | HTTP |
+| **Stellium** | HTTP |
+| **Temporal** | HTTP |
+| **ZeroSlot** | HTTP |
+| **Default** | RPC |
+
+**注意**：QUIC（Quick UDP Internet Connections）相比 HTTP/gRPC 提供更低的延迟。配置 Astralane 或 Node1 时使用 `SwqosTransport::Quic` 可获得最佳性能。
 
 ---
 

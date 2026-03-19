@@ -102,19 +102,23 @@ Each example supports:
 
 #### Supported SWQoS Services
 
-- Astralane (HTTP & QUIC)
-- BlockRazor
-- Bloxroute
-- FlashBlock
-- Jito
-- NextBlock
-- Node1
-- Speedlanding
-- Soyas
-- Stellium
-- Temporal
-- ZeroSlot
-- Default (RPC)
+| Service | Transport Protocols |
+|---------|---------------------|
+| **Astralane** | HTTP, QUIC |
+| **BlockRazor** | HTTP, gRPC |
+| **Bloxroute** | HTTP |
+| **FlashBlock** | HTTP |
+| **Jito** | HTTP |
+| **NextBlock** | HTTP |
+| **Node1** | HTTP, QUIC |
+| **Speedlanding** | HTTP |
+| **Soyas** | HTTP |
+| **Stellium** | HTTP |
+| **Temporal** | HTTP |
+| **ZeroSlot** | HTTP |
+| **Default** | RPC |
+
+**Note**: QUIC (Quick UDP Internet Connections) provides lower latency compared to HTTP/gRPC. Use `SwqosTransport::Quic` when configuring Astralane or Node1 for optimal performance.
 
 ---
 
