@@ -12,6 +12,9 @@ sol-trade-sdk/
 solana-streamer/
 
 # 配置文件（保留 .example 文件作为模板）
+**/solana.yaml
+**/trading.yaml
+
 pumpswap_trade/config/dev/solana.yaml
 pumpswap_trade/config/dev/trading.yaml
 pumpswap_trade/config/prod/solana.yaml
