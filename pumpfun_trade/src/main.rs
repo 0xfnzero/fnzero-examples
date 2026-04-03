@@ -1,6 +1,6 @@
-//! PumpSwap 买→等 30 秒→卖→等 30 秒，只执行一次；可配置多 SWQoS 同时发交易。
+//! PumpFun 内盘买→等 30 秒→卖→等 30 秒，只执行一次；可配置多 SWQoS 同时发交易。
 //!
-//! 无需 gRPC / sol-parser-sdk，启动后：买入 → 休息 30s → 卖出 → 休息 30s。
+//! 针对仍在 bonding curve 上的代币（未毕业到 PumpSwap 外盘）。无需 gRPC / sol-parser-sdk。
 //!
 //! 环境变量：
 //! - MINT：代币 mint 地址（必填，或第一个命令行参数）
@@ -9,8 +9,6 @@
 //! - PRIVATE_KEY：钱包私钥（支持标准 64 字节数组 JSON 或 base58 格式）
 //! - CONFIG_FILE / APP_ENV：配置路径或环境(dev/prod)，见 config/dev|prod/solana.yaml
 //! - NONCE_ACCOUNT：多 SWQoS 时 durable nonce 可由此指定；若已在 solana.yaml 的 nonce_config 中配置则无需设置
-//!
-//! 钱包：通过 PRIVATE_KEY 环境变量或 config 文件中的 private_key 字段配置私钥
 
 mod config;
 mod client;
@@ -20,13 +18,12 @@ mod swqos;
 
 use sol_trade_sdk::{
     common::nonce_cache::fetch_nonce_info,
-    find_pool_by_mint,
     swqos::{SwqosConfig, SwqosType},
-    trading::factory::DexType,
+    trading::core::params::PumpFunParams,
 };
 use solana_sdk::native_token::LAMPORTS_PER_SOL;
-use solana_sdk::signature::Keypair;
 use solana_sdk::pubkey::Pubkey;
+use solana_sdk::signature::Keypair;
 use std::path::Path;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -41,7 +38,7 @@ async fn main() -> anyhow::Result<()> {
     let mint = std::env::args()
         .nth(1)
         .or_else(|| std::env::var("MINT").ok())
-        .expect("用法: pumpswap_trade <MINT> 或设置 MINT 环境变量");
+        .expect("用法: pumpfun_trade <MINT> 或设置 MINT 环境变量");
 
     let config_path = resolve_config_path();
     let trading_path = {
@@ -73,7 +70,7 @@ async fn main() -> anyhow::Result<()> {
     let payer = load_payer(&private_key)?;
 
     println!(
-        "=== PumpSwap 买→休息 {} 秒→卖→休息 {} 秒，共 {} 轮（多 SWQoS 同时发交易）===",
+        "=== PumpFun 内盘 买→休息 {} 秒→卖→休息 {} 秒，共 {} 轮（多 SWQoS 同时发交易）===",
         run::rest_secs(),
         run::rest_secs(),
         run::rounds()
@@ -165,19 +162,23 @@ async fn main() -> anyhow::Result<()> {
 
     let mint_pubkey = Pubkey::from_str(&mint)?;
 
-    println!("\n[1] 查找 PumpSwap 池...");
-    let pool = find_pool_by_mint(&client.infrastructure.rpc, &mint_pubkey, DexType::PumpSwap)
+    println!("\n[1] 解析 PumpFun bonding curve（内盘）...");
+    let _probe = PumpFunParams::from_mint_by_rpc(&client.infrastructure.rpc, &mint_pubkey)
         .await
-        .map_err(|e| anyhow::anyhow!("查找池失败（错误信息中含诊断，请查看）: {}", e))?;
-    println!("[1] ✓ 池地址: {}", pool);
+        .map_err(|e| {
+            anyhow::anyhow!(
+                "无法加载 PumpFun 参数（代币可能已毕业到 PumpSwap 或 mint 无效）: {}",
+                e
+            )
+        })?;
+    println!("[1] ✓ bonding curve 就绪（DexType::PumpFun）");
 
     let buy_slippage_bps = trading_config.as_ref().map(|t| t.buy_slippage_bps).unwrap_or(500);
     let sell_slippage_bps = trading_config.as_ref().map(|t| t.sell_slippage_bps).unwrap_or(9980);
 
-    run::run_pumpswap_loop(
+    run::run_pumpfun_loop(
         &client,
         mint_pubkey,
-        pool,
         trading_config.as_ref(),
         &swqos_types,
         durable_nonce_buy,
@@ -189,6 +190,7 @@ async fn main() -> anyhow::Result<()> {
     .await
 }
 
+/// 跳过 YAML 中的空占位串（如 `""`），以便回退到环境变量 `NONCE_ACCOUNT`
 fn first_nonempty_account(list: &[String]) -> Option<String> {
     list.iter()
         .map(|s| s.trim())
@@ -201,8 +203,8 @@ fn load_dotenv() {
         if let Ok(exe) = std::env::current_exe() {
             if let Some(p) = exe.parent() {
                 for rel in [
-                    "examples/pumpswap_trade/.env",
-                    "../../examples/pumpswap_trade/.env",
+                    "examples/pumpfun_trade/.env",
+                    "../../examples/pumpfun_trade/.env",
                     "../.env",
                     "../../.env",
                 ] {

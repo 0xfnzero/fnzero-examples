@@ -1,0 +1,48 @@
+# =========================
+# Solana 配置（开发环境）— PumpFun 内盘示例
+# =========================
+
+rpc_url: "https://api.mainnet-beta.solana.com"
+
+# 钱包私钥（base58 或 64 字节 JSON 数组）；也可用环境变量 PRIVATE_KEY
+private_key: ""
+
+nonce_config:
+  buy_nonce_accounts:
+    - ""
+  sell_nonce_accounts:
+    - ""
+
+swqos:
+  region: "Frankfurt"
+  enabled_providers:
+    - provider: "Astralane"
+      api_token: "YOUR_API_TOKEN_HERE"
+      enabled: false
+    - provider: "BlockRazor"
+      api_token: "YOUR_API_TOKEN_HERE"
+      enabled: false
+    - provider: "Jito"
+      api_token: "YOUR_API_TOKEN_HERE"
+      enabled: false
+    - provider: "NextBlock"
+      api_token: "YOUR_API_TOKEN_HERE"
+      enabled: false
+    - provider: "Bloxroute"
+      api_token: "YOUR_API_TOKEN_HERE"
+      enabled: false
+    - provider: "ZeroSlot"
+      api_token: "YOUR_API_TOKEN_HERE"
+      enabled: false
+    - provider: "Temporal"
+      api_token: "YOUR_API_TOKEN_HERE"
+      enabled: false
+    - provider: "FlashBlock"
+      api_token: "YOUR_API_TOKEN_HERE"
+      enabled: false
+    - provider: "Node1"
+      api_token: "YOUR_API_TOKEN_HERE"
+      enabled: false
+    - provider: "Default"
+      api_token: null
+      enabled: false

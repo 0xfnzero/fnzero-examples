@@ -4,7 +4,7 @@
 </div>
 
 <p align="center">
-    <strong>A Rust example demonstrating automated trading strategy on PumpSwap: buy → wait 30s → sell → wait 30s, repeat for 3 rounds. Supports multiple SWQoS services for concurrent transaction submission.</strong>
+    <strong>Rust example: PumpSwap outer AMM buy → wait ~30s → sell (1 round by default; see <code>src/run.rs</code>). Encrypted keystore + multi-SWQoS.</strong>
 </p>
 
 <p align="center">
@@ -30,6 +30,8 @@
     <a href="https://discord.gg/vuazbGkqQE">Discord</a>
 </p>
 
+<p align="center"><a href="../README.md">← Back to repository overview</a></p>
+
 ---
 
 ## 📋 Table of Contents
@@ -49,7 +51,7 @@
 
 ## ✨ Features
 
-1. **Automated Trading Loop**: Buy → Wait 30s → Sell → Wait 30s, repeat for 3 rounds
+1. **Automated Trading Loop**: Buy → wait ~30s → sell; **1 round** by default (`ROUNDS`, `REST_SECS` in `src/run.rs`)
 2. **Multiple SWQoS Support**: Send transactions concurrently to multiple MEV protection services
 3. **Durable Nonce**: Transaction replay protection for multi-SWQoS scenarios
 4. **Flexible Configuration**: Support for both YAML config files and environment variables
@@ -371,6 +373,13 @@ APP_ENV=prod ./pumpswap_trade_with_safekey <MINT_ADDRESS>
 ---
 
 ## 🔧 Build
+
+### Local release
+
+```bash
+cargo build --release
+# Binary: build-cache/release/pumpswap_trade_with_safekey
+```
 
 ### Build for Linux Release
 

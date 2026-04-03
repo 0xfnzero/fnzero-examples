@@ -40,6 +40,7 @@
 - [✨ Features](#-features)
 - [📁 Project Structure](#-project-structure)
 - [🛠️ Examples](#️-examples)
+- [📎 Example README index](#example-readme-index)
 - [📦 SDKs & Tools](#-sdks--tools)
 - [🚀 Quick Start](#-quick-start)
 - [📄 License](#-license)
@@ -49,7 +50,7 @@
 
 ## ✨ Features
 
-- **Trading Examples**: Ready-to-use trading bot examples for PumpSwap with automated buy/sell strategies
+- **Trading Examples**: Ready-to-use bots for PumpSwap (outer pool) and PumpFun (bonding curve) with automated buy/sell
 - **Multiple SWQoS Support**: Concurrent transaction submission via multiple MEV protection services
 - **Comprehensive SDKs**: Modular SDKs for trading, parsing, key management, and streaming
 - **Real-time Streaming**: gRPC-based transaction streaming and parsing with low-latency event processing
@@ -60,8 +61,10 @@
 
 ```
 fnzero-examples/
-├── pumpswap_trade/              # PumpSwap trading example (direct private key)
-├── pumpswap_trade_with_safekey/ # PumpSwap trading example (encrypted keystore)
+├── pumpswap_trade/              # PumpSwap (outer pool) trading example (direct private key)
+├── pumpswap_trade_with_safekey/ # PumpSwap (outer pool) trading example (encrypted keystore)
+├── pumpfun_trade/               # PumpFun (bonding curve) trading example (direct private key)
+├── pumpfun_trade_with_safekey/  # PumpFun (bonding curve) trading example (encrypted keystore)
 ├── sol-trade-sdk/              # Unified DEX trading SDK
 ├── sol-parser-sdk/             # Transaction parsing SDK (gRPC streaming)
 ├── sol-safekey/                # Encrypted key management library
@@ -76,21 +79,38 @@ fnzero-examples/
 
 | Example | Description | Run Command | Source Code |
 |---------|-------------|-------------|-------------|
-| **PumpSwap Trading** | Automated buy→wait→sell loop trading on PumpSwap with configurable rounds and rest intervals | `./run.sh` | [pumpswap_trade](./pumpswap_trade/) |
-| **PumpSwap Trading (Encrypted)** | Same as above, but uses encrypted keystore file with password protection | `./run.sh` | [pumpswap_trade_with_safekey](./pumpswap_trade_with_safekey/) |
+| **PumpSwap Trading** | Automated buy→wait→sell loop on PumpSwap (outer AMM); configurable rounds and rest | `./run.sh` | [pumpswap_trade](./pumpswap_trade/) |
+| **PumpSwap Trading (Encrypted)** | Same as above with encrypted keystore | `./run.sh` | [pumpswap_trade_with_safekey](./pumpswap_trade_with_safekey/) |
+| **PumpFun Trading** | Buy→wait→sell on PumpFun bonding curve; token must not have graduated to PumpSwap | `./run.sh` | [pumpfun_trade](./pumpfun_trade/) |
+| **PumpFun Trading (Encrypted)** | Same as above; keystore / `KEYPAIR_BASE58` | `./run.sh` | [pumpfun_trade_with_safekey](./pumpfun_trade_with_safekey/) |
 
-### Example Features
+### Which example should I use?
 
-Both trading examples include:
+| Scenario | Directory |
+|----------|-----------|
+| Token still on **PumpFun** bonding curve (not graduated to PumpSwap) | `pumpfun_trade` or `pumpfun_trade_with_safekey` |
+| Token on **PumpSwap** outer AMM | `pumpswap_trade` or `pumpswap_trade_with_safekey` |
+| Private key via `PRIVATE_KEY` or `private_key` in YAML | `pumpfun_trade` / `pumpswap_trade` |
+| Encrypted **keystore** + password (or fallback `KEYPAIR_BASE58`) | `pumpfun_trade_with_safekey` / `pumpswap_trade_with_safekey` |
 
-- ✅ **Automated Trading Loop**: Buy → wait 30s → sell → wait 30s, repeat for 3 rounds (configurable)
-- ✅ **Multiple SWQoS**: Concurrent transaction submission via multiple MEV protection services
-- ✅ **Flexible Configuration**: YAML-based config for dev/prod environments
-- ✅ **Durable Nonce Support**: Transaction replay protection for multi-SWQoS scenarios
-- ✅ **Gas Fee Strategy**: Configurable priority fees and compute unit prices
-- ✅ **Slippage Protection**: Customizable slippage settings for buy/sell
-- ✅ **Environment Variables**: Override config via `.env` file
-- ✅ **Cross-platform Builds**: Linux and macOS support with optimized release profiles
+### Shared behavior (all four trading examples)
+
+- ✅ **Flow**: Buy → wait ~30s → sell; **1 round by default** (change `ROUNDS` / `REST_SECS` in each crate’s `src/run.rs`)
+- ✅ **Multi-SWQoS**: Concurrent submission to several MEV channels
+- ✅ **YAML + `.env`**: `config/dev|prod/solana.yaml`, `trading.yaml`, and env overrides
+- ✅ **Durable nonce**: Required when **2+** SWQoS providers are enabled—set `nonce_config` or `NONCE_ACCOUNT`; empty `""` placeholders in YAML are skipped so `NONCE_ACCOUNT` still works
+- ✅ **Gas / slippage**: Configurable in `trading.yaml`
+- ✅ **Default**: `wait_tx_confirmed: false`; the bot waits a fixed interval after buy before reading balance—tune for production if needed
+- ⚠️ **Sell size**: Each round sells the wallet’s **full** token balance for that mint (including any balance you held before the buy)
+
+### Example README index
+
+| Example | Chinese | English |
+|---------|---------|---------|
+| PumpSwap (private key) | [README_CN.md](./pumpswap_trade/README_CN.md) | [README.md](./pumpswap_trade/README.md) |
+| PumpSwap (encrypted) | [README_CN.md](./pumpswap_trade_with_safekey/README_CN.md) | [README.md](./pumpswap_trade_with_safekey/README.md) |
+| PumpFun (private key) | [README_CN.md](./pumpfun_trade/README_CN.md) | [README.md](./pumpfun_trade/README.md) |
+| PumpFun (encrypted) | [README_CN.md](./pumpfun_trade_with_safekey/README_CN.md) | [README.md](./pumpfun_trade_with_safekey/README.md) |
 
 ### Configuration
 
@@ -196,39 +216,37 @@ git clone https://github.com/0xfnzero/fnzero-examples.git
 cd fnzero-examples
 ```
 
-### Run Trading Example
+### Run trading examples
 
-**Option 1: Using direct private key**
+Run commands **inside the example crate directory** (each folder is its own Cargo package; there is no repo-root workspace).
+
+**Option 1: Private key (PumpSwap or PumpFun)**
 
 ```bash
-cd pumpswap_trade
+cd pumpswap_trade          # outer AMM; use cd pumpfun_trade for bonding-curve tokens
 
-# Configure your settings
 cp .env.example .env
-# Edit .env with your private key and RPC URL
+# Edit .env: PRIVATE_KEY, SOLANA_RPC_URL, etc.
 
-# Configure SWQoS services
 cp config/dev/solana.yaml.example config/dev/solana.yaml
-# Edit config/dev/solana.yaml with your API tokens
+# Edit solana.yaml: enable SWQoS, set tokens; for 2+ SWQoS configure nonce or NONCE_ACCOUNT
 
-# Run trading bot
-cargo run --release -- <TOKEN_MINT_ADDRESS>
+./run.sh <TOKEN_MINT_ADDRESS>
+# or: cargo run --release -- <TOKEN_MINT_ADDRESS>
 ```
 
-**Option 2: Using encrypted keystore**
+**Option 2: Encrypted keystore**
 
 ```bash
-cd pumpswap_trade_with_safekey
+cd sol-safekey
+cargo run --release -- export <private_key_or_mnemonic> ../pumpswap_trade_with_safekey/keystore.json
+cd ../pumpswap_trade_with_safekey   # or pumpfun_trade_with_safekey
 
-# Generate encrypted keystore
-cargo run --bin sol-safekey -- export <your_private_key_or_mnemonic> ./keystore.json
-
-# Configure settings
 cp .env.example .env
 cp config/dev/solana.yaml.example config/dev/solana.yaml
+# Set keystore_path in solana.yaml (e.g. ./keystore.json)
 
-# Run trading bot (will prompt for password)
-cargo run --release -- <TOKEN_MINT_ADDRESS>
+./run.sh <TOKEN_MINT_ADDRESS>
 ```
 
 ### Configuration Details
@@ -270,17 +288,18 @@ swqos:
     # Add more providers as needed
 ```
 
-### Build for Production
+### Build for production
+
+Each example uses `.cargo/config.toml` so artifacts go to **`build-cache/release/`** (not the default `target/release/`).
 
 ```bash
-# Optimized release build
+cd pumpswap_trade    # or pumpfun_trade, pumpswap_trade_with_safekey, pumpfun_trade_with_safekey
+
 cargo build --release
+./build-cache/release/pumpswap_trade_with_safekey <TOKEN_MINT_ADDRESS>
 
-# Cross-compile for Linux (from macOS)
-cargo build --release --target x86_64-unknown-linux-gnu
-
-# Run compiled binary
-./target/release/pumpswap_trade_with_safekey <TOKEN_MINT_ADDRESS>
+# macOS → Linux bundle (requires x86_64-unknown-linux-gnu toolchain)
+./build-linux-release.sh   # produces linux-release/deploy.tar.gz
 ```
 
 ---

@@ -4,7 +4,7 @@
 </div>
 
 <p align="center">
-    <strong>A Rust example demonstrating automated trading strategy on PumpSwap: buy → wait 30s → sell → wait 30s, repeat for 3 rounds. Supports multiple SWQoS services for concurrent transaction submission.</strong>
+    <strong>Rust example: automated buy → wait ~30s → sell on PumpSwap outer AMM (1 round by default; edit <code>src/run.rs</code>). Multiple SWQoS channels.</strong>
 </p>
 
 <p align="center">
@@ -30,6 +30,12 @@
     <a href="https://discord.gg/vuazbGkqQE">Discord</a>
 </p>
 
+> **Note**: If the token is still on **PumpFun** (bonding curve, not graduated), use **`pumpfun_trade`** / **`pumpfun_trade_with_safekey`** in this repo instead.
+
+---
+
+<p align="center"><a href="../README.md">← Back to repository overview</a></p>
+
 ---
 
 ## 📋 Table of Contents
@@ -50,7 +56,7 @@
 
 ## ✨ Features
 
-1. **Automated Trading Loop**: Buy → Wait 30s → Sell → Wait 30s, repeat for 3 rounds
+1. **Automated Trading Loop**: Buy → wait ~30s → sell; **1 round** by default (edit `ROUNDS`, `REST_SECS` in `src/run.rs`)
 2. **Multiple SWQoS Support**: Send transactions concurrently to multiple MEV protection services
 3. **Durable Nonce**: Transaction replay protection for multi-SWQoS scenarios
 4. **Flexible Configuration**: Support for both YAML config files and environment variables
@@ -238,7 +244,7 @@ APP_ENV=prod ./pumpswap_trade <MINT_ADDRESS>
 cargo build --release
 ```
 
-The binary will be created at `target/release/pumpswap_trade`
+This crate sets `target-dir = "build-cache"` in `.cargo/config.toml`; the binary is at **`build-cache/release/pumpswap_trade`**
 
 ### Build for Linux Release
 

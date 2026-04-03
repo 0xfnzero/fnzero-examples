@@ -121,7 +121,7 @@ async fn main() -> anyhow::Result<()> {
     let (durable_nonce_buy, durable_nonce_sell) = if swqos_count > 1 {
         let buy_str = nonce_config
             .as_ref()
-            .and_then(|n| n.buy_nonce_accounts.first().cloned())
+            .and_then(|n| first_nonempty_account(&n.buy_nonce_accounts))
             .or(env_nonce.clone())
             .ok_or_else(|| {
                 anyhow::anyhow!(
@@ -131,7 +131,7 @@ async fn main() -> anyhow::Result<()> {
             })?;
         let sell_str = nonce_config
             .as_ref()
-            .and_then(|n| n.sell_nonce_accounts.first().cloned())
+            .and_then(|n| first_nonempty_account(&n.sell_nonce_accounts))
             .or_else(|| env_nonce.clone())
             .unwrap_or_else(|| buy_str.clone());
         let buy_pubkey = Pubkey::from_str(&buy_str)?;
@@ -188,6 +188,13 @@ async fn main() -> anyhow::Result<()> {
         sell_slippage_bps,
     )
     .await
+}
+
+fn first_nonempty_account(list: &[String]) -> Option<String> {
+    list.iter()
+        .map(|s| s.trim())
+        .find(|s| !s.is_empty())
+        .map(|s| s.to_string())
 }
 
 fn load_dotenv() {

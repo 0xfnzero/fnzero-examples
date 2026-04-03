@@ -85,7 +85,7 @@ pub async fn run_pumpswap_loop(
             use_exact_sol_amount: None,
             grpc_recv_us: None,
         };
-        let (ok, sigs, err) = client.buy(buy_params).await?;
+        let (ok, sigs, err, _) = client.buy(buy_params).await?;
         if !ok {
             let e = err.as_ref().map(|e| e.to_string()).unwrap_or_else(|| "unknown".to_string());
             anyhow::bail!("第 {} 轮买入失败: {} | sigs: {:?}", round, e, sigs);
@@ -142,7 +142,7 @@ pub async fn run_pumpswap_loop(
             gas_fee_strategy: gas,
             simulate: false,
         };
-        let (ok, sigs, err) = client.sell(sell_params).await?;
+        let (ok, sigs, err, _) = client.sell(sell_params).await?;
         if !ok {
             let e = err.as_ref().map(|e| e.to_string()).unwrap_or_else(|| "unknown".to_string());
             anyhow::bail!("第 {} 轮卖出失败: {} | sigs: {:?}", round, e, sigs);

@@ -1,0 +1,49 @@
+# =========================
+# 交易配置（生产环境，与 copy-bot config/prod/trading.yaml 一致）
+# =========================
+
+# 滑点（基点：1000=10%）与每笔买入金额、持仓时间
+buy_slippage_bps: 300
+sell_slippage_bps: 9980
+buy_sol_amount: 0.01
+hold_seconds: 20
+
+# 小费策略：true=高低两档，false=全局单一费率
+enable_high_low_fee: false
+
+# Gas Fee：优先费(CU 价格) + 给 SWQoS 的小费(SOL)，买入/卖出可分别配置
+gas_fee:
+  # ---------- 全局单一费率（enable_high_low_fee=false 时使用）----------
+  # 买入：计算单元上限、单价(micro-lamports/CU)、给验证者/MEV 的小费(SOL)。CU 不足会报 Computational budget exceeded
+  global_buy_cu_limit: 250000
+  global_buy_cu_price: 3500000
+  global_buy_tip: 0.000125
+  # 卖出：同上
+  global_sell_cu_limit: 250000
+  global_sell_cu_price: 3500000
+  global_sell_tip: 0.0001
+  # 高低两档策略下共用的单笔交易 CU 上限
+  cu_limit: 250000
+
+  # ---------- 高低两档（enable_high_low_fee=true 时使用）----------
+  # 档位一：低小费 + 高优先费（优先费贵、小费少，适合抢速度）
+  low_tip_high_cu_price: 400000
+  low_buy_tip: 0.003
+  low_sell_tip: 0.001
+  # 档位二：高小费 + 低优先费（小费多、优先费低，适合提高成交率）
+  high_tip_low_cu_price: 180000
+  high_buy_tip: 0.003
+  high_sell_tip: 0.001
+
+  # ---------- 账户数据大小限制 ----------
+  # 请求加载的账户数据最大字节数，0 表示不添加此指令
+  buy_data_size_limit: 0
+  sell_data_size_limit: 0
+
+  # ---------- 动态小费 / 动态优先费 ----------
+  # 按「买入金额」比例计算：小费=金额*百分比；优先费同理，有上限
+  enable_dynamic_tip: false
+  dynamic_tip_percentage: 1.0
+  enable_dynamic_cu_price: false
+  dynamic_cu_price_percentage: 0.05
+  dynamic_cu_price_max: 50000000

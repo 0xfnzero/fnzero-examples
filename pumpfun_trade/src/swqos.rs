@@ -32,7 +32,6 @@ pub fn build_swqos_configs(cfg: &SolanaConfig) -> Vec<SwqosConfig> {
         if !p.enabled {
             continue;
         }
-        // 优先从环境变量获取 token，否则使用配置文件中的 token
         let token = get_provider_token(&p.provider)
             .or_else(|| p.api_token.as_ref().cloned())
             .unwrap_or_default();

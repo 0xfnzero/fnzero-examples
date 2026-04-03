@@ -4,7 +4,7 @@
 </div>
 
 <p align="center">
-    <strong>Rust 示例项目，演示在 PumpSwap 上的自动化交易策略：买入 → 等待 30 秒 → 卖出 → 等待 30 秒，共 3 轮。支持多个 SWQoS 服务同时提交交易。</strong>
+    <strong>Rust 示例：PumpSwap 外盘自动买入 → 等待约 30 秒 → 卖出（默认 1 轮，见 <code>src/run.rs</code>）。加密 keystore + 多 SWQoS。</strong>
 </p>
 
 <p align="center">
@@ -30,6 +30,8 @@
     <a href="https://discord.gg/vuazbGkqQE">Discord</a>
 </p>
 
+<p align="center"><a href="../README_CN.md">← 返回仓库总览</a></p>
+
 ---
 
 ## 📋 目录
@@ -49,7 +51,7 @@
 
 ## ✨ 功能特性
 
-1. **自动化交易循环**：买入 → 等待 30 秒 → 卖出 → 等待 30 秒，共 3 轮
+1. **自动化交易循环**：买入 → 等待约 30 秒 → 卖出；默认 **1 轮**（`src/run.rs` 中 `ROUNDS`、`REST_SECS`）
 2. **多 SWQoS 支持**：向多个 MEV 保护服务并发提交交易
 3. **Durable Nonce**：多 SWQoS 场景下的交易重放保护
 4. **灵活配置**：支持 YAML 配置文件和环境变量
@@ -438,6 +440,13 @@ APP_ENV=prod ./pumpswap_trade_with_safekey <MINT_ADDRESS>
 ---
 
 ## 🔧 构建
+
+### 本地 Release
+
+```bash
+cargo build --release
+# 二进制：build-cache/release/pumpswap_trade_with_safekey
+```
 
 ### 构建 Linux Release
 

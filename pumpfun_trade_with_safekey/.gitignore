@@ -1,0 +1,9 @@
+keystore.json
+.env
+.env.*
+!.env.example
+deploy.tar.gz
+.deploy_staging/
+build-cache/
+*.log
+.DS_Store

@@ -1,4 +1,5 @@
-//! 买→休息→卖→休息 循环执行逻辑
+//! 买→休息→卖→休息 循环执行逻辑（PumpFun 内盘 bonding curve）。
+//! 每轮按钱包该 mint 的**全部**代币余额卖出（含买入前已有持仓），与 `pumpswap_trade` 示例一致。
 
 use sol_trade_sdk::{
     common::{
@@ -7,7 +8,7 @@ use sol_trade_sdk::{
     },
     swqos::SwqosType,
     trading::{
-        core::params::{DexParamEnum, PumpSwapParams},
+        core::params::{DexParamEnum, PumpFunParams},
         factory::DexType,
     },
     SolanaTrade, TradeTokenType,
@@ -17,18 +18,15 @@ use solana_sdk::pubkey::Pubkey;
 use crate::config::TradingConfig;
 use crate::swqos::build_gas_fee_strategy;
 
-/// 每轮：买入后休息秒数、卖出后休息秒数
 const REST_SECS: u64 = 30;
-/// 买→休息→卖→休息 的循环次数
 const ROUNDS: u32 = 1;
 
 pub const fn rest_secs() -> u64 { REST_SECS }
 pub const fn rounds() -> u32 { ROUNDS }
 
-pub async fn run_pumpswap_loop(
+pub async fn run_pumpfun_loop(
     client: &SolanaTrade,
     mint_pubkey: Pubkey,
-    pool: Pubkey,
     trading_config: Option<&TradingConfig>,
     swqos_types: &[SwqosType],
     durable_nonce_buy: Option<DurableNonceInfo>,
@@ -45,13 +43,13 @@ pub async fn run_pumpswap_loop(
 
         let gas = build_gas_fee_strategy(trading_config, swqos_types);
         let recent_blockhash = client.infrastructure.rpc.get_latest_blockhash().await?;
-        let pool_params =
-            PumpSwapParams::from_pool_address_by_rpc(&client.infrastructure.rpc, &pool).await?;
+        let pump_params =
+            PumpFunParams::from_mint_by_rpc(&client.infrastructure.rpc, &mint_pubkey).await?;
 
         let mint_ata = get_associated_token_address_with_program_id_fast_use_seed(
             &payer_pubkey,
             &mint_pubkey,
-            &pool_params.base_token_program,
+            &pump_params.token_program,
             use_seed,
         );
         let mint_ata_exists = client.infrastructure.rpc.get_account(&mint_ata).await.is_ok();
@@ -64,17 +62,17 @@ pub async fn run_pumpswap_loop(
             }
         }
 
-        println!("[2] 买入（同时发往所有已配置 SWQoS）...");
+        println!("[2] 买入（PumpFun 内盘，同时发往所有已配置 SWQoS）...");
         let buy_params = sol_trade_sdk::TradeBuyParams {
-            dex_type: DexType::PumpSwap,
+            dex_type: DexType::PumpFun,
             input_token_type: TradeTokenType::SOL,
             mint: mint_pubkey,
             input_token_amount: sol_lamports,
             slippage_basis_points: Some(buy_slippage_bps),
             recent_blockhash: Some(recent_blockhash),
-            extension_params: DexParamEnum::PumpSwap(pool_params.clone()),
+            extension_params: DexParamEnum::PumpFun(pump_params.clone()),
             address_lookup_table_account: None,
-            wait_tx_confirmed: false, // 不等待链上确认时，日志显示 confirmed: -, total: 该通道 submit_done
+            wait_tx_confirmed: false,
             create_input_token_ata: false,
             close_input_token_ata: false,
             create_mint_ata,
@@ -95,8 +93,11 @@ pub async fn run_pumpswap_loop(
         println!("[3] 买入后休息 {} 秒...", REST_SECS);
         tokio::time::sleep(std::time::Duration::from_secs(REST_SECS)).await;
 
+        // 休息后重新拉取 mint 对应 token_program，再查余额（与卖出前刷新 params 一致）
+        let pump_for_balance =
+            PumpFunParams::from_mint_by_rpc(&client.infrastructure.rpc, &mint_pubkey).await?;
         let balance = client
-            .get_payer_token_balance_with_program(&mint_pubkey, &pool_params.base_token_program)
+            .get_payer_token_balance_with_program(&mint_pubkey, &pump_for_balance.token_program)
             .await?;
         if balance == 0 {
             anyhow::bail!("第 {} 轮：代币余额为 0，无法卖出", round);
@@ -119,20 +120,21 @@ pub async fn run_pumpswap_loop(
         };
 
         let recent_blockhash_sell = client.infrastructure.rpc.get_latest_blockhash().await?;
-        let pool_params_sell =
-            PumpSwapParams::from_pool_address_by_rpc(&client.infrastructure.rpc, &pool).await?;
+        // 卖出前重新拉取链上参数（creator_vault / bonding curve 状态等）
+        let pump_params_sell =
+            PumpFunParams::from_mint_by_rpc(&client.infrastructure.rpc, &mint_pubkey).await?;
 
         let sell_params = sol_trade_sdk::TradeSellParams {
-            dex_type: DexType::PumpSwap,
+            dex_type: DexType::PumpFun,
             output_token_type: TradeTokenType::SOL,
             mint: mint_pubkey,
             input_token_amount: balance,
             slippage_basis_points: Some(sell_slippage_bps),
             recent_blockhash: Some(recent_blockhash_sell),
             with_tip: true,
-            extension_params: DexParamEnum::PumpSwap(pool_params_sell),
+            extension_params: DexParamEnum::PumpFun(pump_params_sell),
             address_lookup_table_account: None,
-            wait_tx_confirmed: false, // 不等待链上确认时，日志显示 confirmed: -, total: 该通道 submit_done
+            wait_tx_confirmed: false,
             create_output_token_ata: true,
             close_output_token_ata: false,
             close_mint_token_ata: false,

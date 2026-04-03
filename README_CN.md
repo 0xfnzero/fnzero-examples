@@ -40,6 +40,7 @@
 - [✨ 特性](#-特性)
 - [📁 项目结构](#-项目结构)
 - [🛠️ 示例](#️-示例)
+- [📎 示例文档索引](#示例文档索引)
 - [📦 SDK 与工具](#-sdk-与工具)
 - [🚀 快速开始](#-快速开始)
 - [📄 许可证](#-许可证)
@@ -49,7 +50,7 @@
 
 ## ✨ 特性
 
-- **交易示例**: 即用型 PumpSwap 交易机器人示例，支持自动化买入/卖出策略
+- **交易示例**: PumpSwap 外盘与 PumpFun 内盘交易机器人示例，支持自动化买入/卖出策略
 - **多 SWQoS 支持**: 通过多个 MEV 保护服务并发提交交易
 - **全面的 SDK**: 用于交易、解析、密钥管理和流式处理的模块化 SDK
 - **实时流式处理**: 基于 gRPC 的交易流式处理和低延迟事件解析
@@ -60,8 +61,10 @@
 
 ```
 fnzero-examples/
-├── pumpswap_trade/              # PumpSwap 交易示例（直接私钥）
-├── pumpswap_trade_with_safekey/ # PumpSwap 交易示例（加密密钥库）
+├── pumpswap_trade/              # PumpSwap 外盘交易示例（直接私钥）
+├── pumpswap_trade_with_safekey/ # PumpSwap 外盘交易示例（加密密钥库）
+├── pumpfun_trade/               # PumpFun 内盘交易示例（直接私钥）
+├── pumpfun_trade_with_safekey/  # PumpFun 内盘交易示例（加密密钥库）
 ├── sol-trade-sdk/              # 统一 DEX 交易 SDK
 ├── sol-parser-sdk/             # 交易解析 SDK（gRPC 流式处理）
 ├── sol-safekey/                # 加密密钥管理库
@@ -76,21 +79,38 @@ fnzero-examples/
 
 | 示例 | 描述 | 运行命令 | 源代码 |
 |---------|-------------|-------------|-------------|
-| **PumpSwap 交易** | PumpSwap 自动化买→等→卖循环交易，可配置轮次和休息间隔 | `./run.sh` | [pumpswap_trade](./pumpswap_trade/) |
+| **PumpSwap 交易** | PumpSwap 外盘自动化买→等→卖循环交易，可配置轮次和休息间隔 | `./run.sh` | [pumpswap_trade](./pumpswap_trade/) |
 | **PumpSwap 交易（加密）** | 同上，但使用带密码保护的加密密钥库文件 | `./run.sh` | [pumpswap_trade_with_safekey](./pumpswap_trade_with_safekey/) |
+| **PumpFun 交易** | PumpFun 内盘（bonding curve）买→等→卖，代币须未毕业到 PumpSwap | `./run.sh` | [pumpfun_trade](./pumpfun_trade/) |
+| **PumpFun 交易（加密）** | 同上，keystore / `KEYPAIR_BASE58` | `./run.sh` | [pumpfun_trade_with_safekey](./pumpfun_trade_with_safekey/) |
 
-### 示例特性
+### 如何选择示例
 
-两个交易示例均包含：
+| 场景 | 推荐目录 |
+|------|----------|
+| 代币仍在 **PumpFun 内盘**（bonding curve），尚未毕业到 PumpSwap | `pumpfun_trade` 或 `pumpfun_trade_with_safekey` |
+| 代币已在 **PumpSwap 外盘** AMM | `pumpswap_trade` 或 `pumpswap_trade_with_safekey` |
+| 私钥通过 `PRIVATE_KEY` 或 `solana.yaml` 的 `private_key` | `pumpfun_trade` / `pumpswap_trade` |
+| 加密 **keystore** + 密码（或备用 `KEYPAIR_BASE58`） | `pumpfun_trade_with_safekey` / `pumpswap_trade_with_safekey` |
 
-- ✅ **自动化交易循环**: 买入 → 等待 30 秒 → 卖出 → 等待 30 秒，重复 3 轮（可配置）
-- ✅ **多 SWQoS**: 通过多个 MEV 保护服务并发提交交易
-- ✅ **灵活配置**: 基于 YAML 的开发/生产环境配置
-- ✅ **Durable Nonce 支持**: 多 SWQoS 场景下的交易重放保护
-- ✅ **Gas 费策略**: 可配置的优先费用和计算单元价格
-- ✅ **滑点保护**: 可自定义买入/卖出滑点设置
-- ✅ **环境变量**: 通过 `.env` 文件覆盖配置
-- ✅ **跨平台构建**: 支持 Linux 和 macOS，优化的发布配置
+### 示例特性（四个交易示例共通）
+
+- ✅ **自动化流程**: 买入 → 等待约 30 秒 → 卖出；**默认执行 1 轮**（可在各示例 `src/run.rs` 中修改 `ROUNDS`、`REST_SECS`）
+- ✅ **多 SWQoS**: 多个 MEV 保护通道并发提交
+- ✅ **YAML + .env**: `config/dev|prod/solana.yaml`、`trading.yaml` 与环境变量
+- ✅ **Durable Nonce**: 启用 **2 个及以上** SWQoS 时需在 `nonce_config` 或环境变量 `NONCE_ACCOUNT` 中配置有效 nonce 账户；YAML 中占位 `""` 会被忽略并回退到 `NONCE_ACCOUNT`
+- ✅ **Gas / 滑点**: `trading.yaml` 中可配
+- ✅ **默认不等待链上确认**（`wait_tx_confirmed: false`），买入后依赖固定等待时间再查余额；生产环境可按需改为等待确认或加长等待
+- ⚠️ **卖出数量**: 每轮按钱包该 mint 的**全部**代币余额卖出（含买入前已有持仓）
+
+### 示例文档索引
+
+| 示例 | 中文 README | English |
+|------|----------------|---------|
+| PumpSwap（私钥） | [pumpswap_trade/README_CN.md](./pumpswap_trade/README_CN.md) | [pumpswap_trade/README.md](./pumpswap_trade/README.md) |
+| PumpSwap（加密） | [pumpswap_trade_with_safekey/README_CN.md](./pumpswap_trade_with_safekey/README_CN.md) | [pumpswap_trade_with_safekey/README.md](./pumpswap_trade_with_safekey/README.md) |
+| PumpFun（私钥） | [pumpfun_trade/README_CN.md](./pumpfun_trade/README_CN.md) | [pumpfun_trade/README.md](./pumpfun_trade/README.md) |
+| PumpFun（加密） | [pumpfun_trade_with_safekey/README_CN.md](./pumpfun_trade_with_safekey/README_CN.md) | [pumpfun_trade_with_safekey/README.md](./pumpfun_trade_with_safekey/README.md) |
 
 ### 配置说明
 
@@ -198,37 +218,35 @@ cd fnzero-examples
 
 ### 运行交易示例
 
-**方式 1: 使用直接私钥**
+**须在对应示例子目录下执行**（每个目录是独立 Cargo 包，仓库根目录无 workspace）。
+
+**方式 1：私钥（PumpSwap 或 PumpFun 二选一）**
 
 ```bash
-cd pumpswap_trade
+cd pumpswap_trade          # 外盘；若做内盘则改为 cd pumpfun_trade
 
-# 配置设置
 cp .env.example .env
-# 编辑 .env，填入你的私钥和 RPC URL
+# 编辑 .env：PRIVATE_KEY、SOLANA_RPC_URL 等
 
-# 配置 SWQoS 服务
 cp config/dev/solana.yaml.example config/dev/solana.yaml
-# 编辑 config/dev/solana.yaml，填入你的 API tokens
+# 编辑 solana.yaml：启用 SWQoS、填写 token；多 SWQoS 时配置 nonce 或设 NONCE_ACCOUNT
 
-# 运行交易机器人
-cargo run --release -- <TOKEN_MINT_ADDRESS>
+./run.sh <TOKEN_MINT_ADDRESS>
+# 或: cargo run --release -- <TOKEN_MINT_ADDRESS>
 ```
 
-**方式 2: 使用加密密钥库**
+**方式 2：加密 keystore**
 
 ```bash
-cd pumpswap_trade_with_safekey
+cd sol-safekey
+cargo run --release -- export <你的私钥或助记词> ../pumpswap_trade_with_safekey/keystore.json
+cd ../pumpswap_trade_with_safekey   # PumpFun 则改为 pumpfun_trade_with_safekey
 
-# 生成加密密钥库
-cargo run --bin sol-safekey -- export <你的私钥或助记词> ./keystore.json
-
-# 配置设置
 cp .env.example .env
 cp config/dev/solana.yaml.example config/dev/solana.yaml
+# solana.yaml 中设置 keystore_path（如 ./keystore.json）
 
-# 运行交易机器人（会提示输入密码）
-cargo run --release -- <TOKEN_MINT_ADDRESS>
+./run.sh <TOKEN_MINT_ADDRESS>
 ```
 
 ### 配置详情
@@ -272,15 +290,16 @@ swqos:
 
 ### 生产环境构建
 
+各示例通过 `.cargo/config.toml` 将产物输出到 **`build-cache/release/`**（而非默认的 `target/release/`）。
+
 ```bash
-# 优化的发布构建
+cd pumpswap_trade    # 或 pumpfun_trade、pumpswap_trade_with_safekey、pumpfun_trade_with_safekey
+
 cargo build --release
+./build-cache/release/pumpswap_trade <TOKEN_MINT_ADDRESS>   # 二进制名与目录名一致
 
-# 交叉编译到 Linux（从 macOS）
-cargo build --release --target x86_64-unknown-linux-gnu
-
-# 运行编译的二进制文件
-./target/release/pumpswap_trade_with_safekey <TOKEN_MINT_ADDRESS>
+# 从 macOS 交叉编译 Linux（需已安装 x86_64-unknown-linux-gnu 工具链）
+./build-linux-release.sh   # 生成 linux-release/deploy.tar.gz
 ```
 
 ---

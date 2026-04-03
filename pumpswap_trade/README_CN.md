@@ -4,7 +4,7 @@
 </div>
 
 <p align="center">
-    <strong>Rust 示例项目，演示在 PumpSwap 上的自动化交易策略：买入 → 等待 30 秒 → 卖出 → 等待 30 秒，共 3 轮。支持多个 SWQoS 服务同时提交交易。</strong>
+    <strong>Rust 示例：在 PumpSwap 外盘上自动买入 → 等待约 30 秒 → 卖出（默认 1 轮，可在 <code>src/run.rs</code> 调整）。支持多 SWQoS 并发提交。</strong>
 </p>
 
 <p align="center">
@@ -30,6 +30,12 @@
     <a href="https://discord.gg/vuazbGkqQE">Discord</a>
 </p>
 
+> **提示**：若代币仍在 **PumpFun 内盘**（未毕业到 PumpSwap），请使用同仓库下的 **`pumpfun_trade`** / **`pumpfun_trade_with_safekey`**。
+
+---
+
+<p align="center"><a href="../README_CN.md">← 返回仓库总览</a></p>
+
 ---
 
 ## 📋 目录
@@ -50,7 +56,7 @@
 
 ## ✨ 功能特性
 
-1. **自动化交易循环**：买入 → 等待 30 秒 → 卖出 → 等待 30 秒，共 3 轮
+1. **自动化交易循环**：买入 → 等待约 30 秒 → 卖出；默认 **1 轮**（修改 `src/run.rs` 中 `ROUNDS`、`REST_SECS`）
 2. **多 SWQoS 支持**：向多个 MEV 保护服务并发提交交易
 3. **Durable Nonce**：多 SWQoS 场景下的交易重放保护
 4. **灵活配置**：支持 YAML 配置文件和环境变量
@@ -238,7 +244,7 @@ APP_ENV=prod ./pumpswap_trade <MINT_ADDRESS>
 cargo build --release
 ```
 
-二进制文件将生成在 `target/release/pumpswap_trade`
+本仓库在 `.cargo/config.toml` 中设置了 `target-dir = "build-cache"`，二进制路径为 **`build-cache/release/pumpswap_trade`**
 
 ### 构建 Linux Release
 
