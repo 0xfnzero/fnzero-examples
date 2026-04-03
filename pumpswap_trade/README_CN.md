@@ -85,6 +85,18 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 ## 🛠️ 配置
 
+### 运行前必做（隐私）
+
+仓库**不**跟踪你的 `.env`、`config/**/solana.yaml`、`config/**/trading.yaml`（见根目录 [README_CN.md](../README_CN.md)「运行前准备与隐私」）。首次使用请执行：
+
+```bash
+cp .env.example .env
+cp config/dev/solana.yaml.example config/dev/solana.yaml
+cp config/dev/trading.yaml.example config/dev/trading.yaml
+```
+
+再编辑上述文件填入私钥、RPC、SWQoS token 等；**切勿** `git add` 这些文件。
+
 ### 环境变量
 
 根据 `.env.example` 创建 `.env` 文件：
@@ -157,17 +169,19 @@ private_key: "你的私钥"
 
 ### 配置文件
 
-配置文件组织在 `config/` 目录中：
+本地配置文件（由 `.example` 复制而来，**勿提交**）建议组织为：
 
 ```
 config/
 ├── dev/
-│   ├── solana.yaml      # RPC、私钥、SWQoS、nonce 配置
-│   └── trading.yaml    # 交易参数、gas 费设置
+│   ├── solana.yaml      # 本地：RPC、私钥、SWQoS、nonce
+│   └── trading.yaml     # 本地：交易参数、gas
 └── prod/
     ├── solana.yaml
     └── trading.yaml
 ```
+
+仓库中仅保留对应的 `*.yaml.example` 模板。
 
 **环境变量覆盖**：
 - 配置文件中的所有敏感值都可以被环境变量覆盖

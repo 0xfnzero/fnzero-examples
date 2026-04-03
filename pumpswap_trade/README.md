@@ -85,6 +85,18 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 ## 🛠️ Configuration
 
+### First-time setup (privacy)
+
+The repo does **not** track your `.env`, `config/**/solana.yaml`, or `config/**/trading.yaml` (see root [README.md](../README.md) “Before you run & privacy”). On first use:
+
+```bash
+cp .env.example .env
+cp config/dev/solana.yaml.example config/dev/solana.yaml
+cp config/dev/trading.yaml.example config/dev/trading.yaml
+```
+
+Edit those files with keys, RPC, SWQoS tokens—**never** `git add` them.
+
 ### Environment Variables
 
 Create a `.env` file based on `.env.example`:
@@ -157,17 +169,19 @@ private_key: "your_private_key_here"
 
 ### Config Files
 
-Configuration is organized in `config/` directory:
+Keep local config (copied from `*.example`, **not committed**) under `config/`:
 
 ```
 config/
 ├── dev/
-│   ├── solana.yaml      # RPC, private_key, SWQoS, nonce config
-│   └── trading.yaml    # Trading parameters, gas fee settings
+│   ├── solana.yaml      # local: RPC, private_key, SWQoS, nonce
+│   └── trading.yaml     # local: trading params, gas
 └── prod/
     ├── solana.yaml
     └── trading.yaml
 ```
+
+Only `*.yaml.example` templates live in the repository.
 
 **Environment Variables Override**:
 - All sensitive values in config files can be overridden by environment variables

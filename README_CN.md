@@ -42,6 +42,7 @@
 - [🛠️ 示例](#️-示例)
 - [📎 示例文档索引](#示例文档索引)
 - [📦 SDK 与工具](#-sdk-与工具)
+- [📋 运行前准备与隐私](#-运行前准备与隐私)
 - [🚀 快速开始](#-快速开始)
 - [📄 许可证](#-许可证)
 - [💬 联系方式](#-联系方式)
@@ -114,11 +115,8 @@ fnzero-examples/
 
 ### 配置说明
 
-每个示例支持：
-
-- **环境变量**: `.env` 文件用于敏感配置
-- **YAML 配置**: `config/dev/solana.yaml` 和 `config/prod/solana.yaml`
-- **示例模板**: `.yaml.example` 文件作为配置模板
+- **仓库内**仅有 `*.yaml.example` 与 `.env.example`；**本地**的 `solana.yaml`、`trading.yaml`、`.env` 由你从模板复制生成，**不会被 Git 跟踪**（见「运行前准备与隐私」）。
+- **环境变量**可覆盖 YAML 中的项；多 SWQoS 时务必配置 durable nonce 或 `NONCE_ACCOUNT`。
 
 #### 支持的 SWQoS 服务
 
@@ -201,24 +199,76 @@ Solana 交易流式处理和实时数据处理工具。
 
 ---
 
-## 🚀 快速开始
+## 📋 运行前准备与隐私
 
-### 前置要求
+**以下步骤在首次运行任意交易示例前完成。** 仓库**不**包含你的私钥、API Token 或真实 RPC 配置；仅提供 `*.yaml.example` 与 `.env.example` 模板。
 
-- Rust 1.70+ 和 Cargo
-- Solana CLI（可选，用于钱包管理）
-- Solana RPC 端点（mainnet-beta 或 devnet）
-
-### 克隆仓库
+### 1. 克隆本仓库
 
 ```bash
 git clone https://github.com/0xfnzero/fnzero-examples.git
 cd fnzero-examples
 ```
 
+### 2. 在示例子目录中从模板生成本地配置（必做）
+
+进入你要用的示例（如 `pumpswap_trade`、`pumpfun_trade` 等），**每个环境各复制一次**：
+
+```bash
+cd pumpswap_trade   # 或 pumpfun_trade / *_with_safekey
+
+cp .env.example .env
+cp config/dev/solana.yaml.example config/dev/solana.yaml
+cp config/dev/trading.yaml.example config/dev/trading.yaml
+# 若使用生产配置，同样复制 config/prod/*.example → config/prod/*.yaml
+```
+
+然后**本地编辑**（勿提交）：
+
+| 文件 | 内容 |
+|------|------|
+| `.env` | `PRIVATE_KEY` 或 `KEYSTORE_PASSWORD`、`SOLANA_RPC_URL`、`NONCE_ACCOUNT`（多 SWQoS 时）等 |
+| `config/*/solana.yaml` | `rpc_url`、`private_key` 或 `keystore_path`、SWQoS `api_token`、`nonce_config` |
+| `config/*/trading.yaml` | 买入金额、滑点、Gas 等 |
+
+`APP_ENV=dev` 读 `config/dev/`，`APP_ENV=prod` 读 `config/prod/`。
+
+### 3. 使用加密钱包时：单独准备 sol-safekey
+
+本仓库的 `.gitignore` **不包含** [sol-safekey](https://github.com/0xfnzero/sol-safekey) 子模块目录。生成 `keystore.json` 前请先克隆该工具仓库：
+
+```bash
+cd /path/to/parent
+git clone https://github.com/0xfnzero/sol-safekey.git
+cd sol-safekey
+cargo run --release -- export <私钥或助记词> /path/to/fnzero-examples/pumpswap_trade_with_safekey/keystore.json
+```
+
+再在对应示例的 `solana.yaml` 中设置 `keystore_path`（如 `./keystore.json`）。
+
+### 4. 隐私与 Git：不要提交的内容
+
+以下文件**已被 `.gitignore` 忽略**，且**切勿**强行 `git add -f` 提交：
+
+- `.env`、`.env.*`（除 `.env.example`）
+- `config/**/solana.yaml`、`config/**/trading.yaml`（本地副本）
+- `keystore.json`、任何含私钥的文件
+
+向他人分享代码或提 PR 前，用 `git status` 确认未包含上述文件。若曾在仓库中误提交过密钥，请立即轮换密钥并清理 Git 历史。
+
+### 前置要求（环境）
+
+- Rust 1.70+ 和 Cargo
+- Solana CLI（可选）
+- 可用的 Solana RPC（强烈建议自有或付费节点，避免默认公共节点限流）
+
+---
+
+## 🚀 快速开始
+
 ### 运行交易示例
 
-**须在对应示例子目录下执行**（每个目录是独立 Cargo 包，仓库根目录无 workspace）。
+**须在对应示例子目录下执行**（每个目录是独立 Cargo 包，仓库根目录无 workspace）。**若尚未完成「运行前准备」中的复制与编辑，请先完成。**
 
 **方式 1：私钥（PumpSwap 或 PumpFun 二选一）**
 
@@ -226,25 +276,26 @@ cd fnzero-examples
 cd pumpswap_trade          # 外盘；若做内盘则改为 cd pumpfun_trade
 
 cp .env.example .env
-# 编辑 .env：PRIVATE_KEY、SOLANA_RPC_URL 等
-
 cp config/dev/solana.yaml.example config/dev/solana.yaml
-# 编辑 solana.yaml：启用 SWQoS、填写 token；多 SWQoS 时配置 nonce 或设 NONCE_ACCOUNT
+cp config/dev/trading.yaml.example config/dev/trading.yaml
+# 编辑 .env 与 yaml：PRIVATE_KEY、RPC、SWQoS token、nonce 等（详见「运行前准备」）
 
 ./run.sh <TOKEN_MINT_ADDRESS>
 # 或: cargo run --release -- <TOKEN_MINT_ADDRESS>
 ```
 
-**方式 2：加密 keystore**
+**方式 2：加密 keystore**（需已按上文单独克隆 [sol-safekey](https://github.com/0xfnzero/sol-safekey)）
 
 ```bash
-cd sol-safekey
-cargo run --release -- export <你的私钥或助记词> ../pumpswap_trade_with_safekey/keystore.json
-cd ../pumpswap_trade_with_safekey   # PumpFun 则改为 pumpfun_trade_with_safekey
+cd /path/to/sol-safekey
+cargo run --release -- export <你的私钥或助记词> /path/to/fnzero-examples/pumpswap_trade_with_safekey/keystore.json
+
+cd /path/to/fnzero-examples/pumpswap_trade_with_safekey   # PumpFun 则用 pumpfun_trade_with_safekey
 
 cp .env.example .env
 cp config/dev/solana.yaml.example config/dev/solana.yaml
-# solana.yaml 中设置 keystore_path（如 ./keystore.json）
+cp config/dev/trading.yaml.example config/dev/trading.yaml
+# 编辑 solana.yaml：keystore_path（如 ./keystore.json）、SWQoS、nonce 等
 
 ./run.sh <TOKEN_MINT_ADDRESS>
 ```
@@ -323,7 +374,7 @@ MIT License
 
 ## ⚠️ 重要提示
 
-1. **安全**: 永远不要将私钥或 API tokens 提交到版本控制
+1. **安全**: 永远不要将私钥、keystore、`solana.yaml` / `trading.yaml` 本地副本或 `.env` 提交到版本控制；首次运行前务必阅读上文「运行前准备与隐私」
 2. **测试**: 在主网使用前请在 devnet 上充分测试
 3. **风险**: 加密货币交易存在重大风险
 4. **合规**: 确保遵守当地法律法规

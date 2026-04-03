@@ -42,6 +42,7 @@
 - [🛠️ Examples](#️-examples)
 - [📎 Example README index](#example-readme-index)
 - [📦 SDKs & Tools](#-sdks--tools)
+- [📋 Before you run & privacy](#-before-you-run--privacy)
 - [🚀 Quick Start](#-quick-start)
 - [📄 License](#-license)
 - [💬 Contact](#-contact)
@@ -114,11 +115,8 @@ fnzero-examples/
 
 ### Configuration
 
-Each example supports:
-
-- **Environment Variables**: `.env` file for sensitive configuration
-- **YAML Config**: `config/dev/solana.yaml` and `config/prod/solana.yaml`
-- **Example Templates**: `.yaml.example` files as configuration templates
+- The repo only ships `*.yaml.example` and `.env.example`. Your local `solana.yaml`, `trading.yaml`, and `.env` are created from those templates and are **git-ignored** (see “Before you run & privacy”).
+- Environment variables can override YAML. With multiple SWQoS providers, configure durable nonce or `NONCE_ACCOUNT`.
 
 #### Supported SWQoS Services
 
@@ -201,24 +199,76 @@ Utilities for Solana transaction streaming and real-time data processing.
 
 ---
 
-## 🚀 Quick Start
+## 📋 Before you run & privacy
 
-### Prerequisites
+**Do this before running any trading example for the first time.** This repository does **not** ship your private keys, SWQoS API tokens, or production RPC URLs—only `*.yaml.example` and `.env.example` templates.
 
-- Rust 1.70+ and Cargo
-- Solana CLI (optional, for wallet management)
-- A Solana RPC endpoint (mainnet-beta or devnet)
-
-### Clone Repository
+### 1. Clone this repository
 
 ```bash
 git clone https://github.com/0xfnzero/fnzero-examples.git
 cd fnzero-examples
 ```
 
+### 2. Create local config from templates (required)
+
+`cd` into the example you need (`pumpswap_trade`, `pumpfun_trade`, etc.) and copy templates **per environment**:
+
+```bash
+cd pumpswap_trade   # or pumpfun_trade / *_with_safekey
+
+cp .env.example .env
+cp config/dev/solana.yaml.example config/dev/solana.yaml
+cp config/dev/trading.yaml.example config/dev/trading.yaml
+# For prod, also copy config/prod/*.example → config/prod/*.yaml
+```
+
+Then **edit locally** (do not commit):
+
+| File | What to fill in |
+|------|-----------------|
+| `.env` | `PRIVATE_KEY` or `KEYSTORE_PASSWORD`, `SOLANA_RPC_URL`, `NONCE_ACCOUNT` (if multi-SWQoS), … |
+| `config/*/solana.yaml` | `rpc_url`, `private_key` or `keystore_path`, SWQoS `api_token`, `nonce_config`, … |
+| `config/*/trading.yaml` | Buy size, slippage, gas, … |
+
+`APP_ENV=dev` uses `config/dev/`, `APP_ENV=prod` uses `config/prod/`.
+
+### 3. Encrypted keystore: install sol-safekey separately
+
+This repo’s `.gitignore` excludes the [sol-safekey](https://github.com/0xfnzero/sol-safekey) tree. Clone that project to generate `keystore.json`:
+
+```bash
+cd /path/to/parent
+git clone https://github.com/0xfnzero/sol-safekey.git
+cd sol-safekey
+cargo run --release -- export <private_key_or_mnemonic> /path/to/fnzero-examples/pumpswap_trade_with_safekey/keystore.json
+```
+
+Then set `keystore_path` in the example’s `solana.yaml` (e.g. `./keystore.json`).
+
+### 4. Privacy & Git: never commit
+
+These paths are **ignored** by `.gitignore`—do **not** force-add them:
+
+- `.env`, `.env.*` (except `.env.example`)
+- `config/**/solana.yaml`, `config/**/trading.yaml` (your local copies)
+- `keystore.json` and any file containing private keys
+
+Run `git status` before pushing. If secrets were ever committed, rotate keys and scrub history.
+
+### Prerequisites (tooling)
+
+- Rust 1.70+ and Cargo
+- Solana CLI (optional)
+- A reliable Solana RPC endpoint (prefer your own or paid; public RPCs rate-limit)
+
+---
+
+## 🚀 Quick Start
+
 ### Run trading examples
 
-Run commands **inside the example crate directory** (each folder is its own Cargo package; there is no repo-root workspace).
+Run commands **inside the example crate directory** (each folder is its own Cargo package; there is no repo-root workspace). **If you have not completed the steps above, copy templates and edit them first.**
 
 **Option 1: Private key (PumpSwap or PumpFun)**
 
@@ -226,25 +276,26 @@ Run commands **inside the example crate directory** (each folder is its own Carg
 cd pumpswap_trade          # outer AMM; use cd pumpfun_trade for bonding-curve tokens
 
 cp .env.example .env
-# Edit .env: PRIVATE_KEY, SOLANA_RPC_URL, etc.
-
 cp config/dev/solana.yaml.example config/dev/solana.yaml
-# Edit solana.yaml: enable SWQoS, set tokens; for 2+ SWQoS configure nonce or NONCE_ACCOUNT
+cp config/dev/trading.yaml.example config/dev/trading.yaml
+# Edit .env and yaml: PRIVATE_KEY, RPC, SWQoS tokens, nonce, … (see “Before you run”)
 
 ./run.sh <TOKEN_MINT_ADDRESS>
 # or: cargo run --release -- <TOKEN_MINT_ADDRESS>
 ```
 
-**Option 2: Encrypted keystore**
+**Option 2: Encrypted keystore** (requires a separate [sol-safekey](https://github.com/0xfnzero/sol-safekey) clone as described above)
 
 ```bash
-cd sol-safekey
-cargo run --release -- export <private_key_or_mnemonic> ../pumpswap_trade_with_safekey/keystore.json
-cd ../pumpswap_trade_with_safekey   # or pumpfun_trade_with_safekey
+cd /path/to/sol-safekey
+cargo run --release -- export <private_key_or_mnemonic> /path/to/fnzero-examples/pumpswap_trade_with_safekey/keystore.json
+
+cd /path/to/fnzero-examples/pumpswap_trade_with_safekey   # or pumpfun_trade_with_safekey
 
 cp .env.example .env
 cp config/dev/solana.yaml.example config/dev/solana.yaml
-# Set keystore_path in solana.yaml (e.g. ./keystore.json)
+cp config/dev/trading.yaml.example config/dev/trading.yaml
+# Edit solana.yaml: keystore_path, SWQoS, nonce, …
 
 ./run.sh <TOKEN_MINT_ADDRESS>
 ```
@@ -323,7 +374,7 @@ See [LICENSE](./LICENSE) for details.
 
 ## ⚠️ Important Notes
 
-1. **Security**: Never commit private keys or API tokens to version control
+1. **Security**: Never commit private keys, keystores, local `solana.yaml` / `trading.yaml`, or `.env`; read “Before you run & privacy” before the first run
 2. **Testing**: Thoroughly test on devnet before using on mainnet
 3. **Risk**: Trading cryptocurrencies involves significant risk
 4. **Compliance**: Ensure compliance with local laws and regulations

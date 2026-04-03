@@ -80,6 +80,19 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 ## 🛠️ Configuration
 
+### First-time setup (privacy)
+
+1. Clone **[sol-safekey](https://github.com/0xfnzero/sol-safekey)** separately to build `keystore.json` (not included in this repo)—see root [README.md](../README.md).
+2. In this crate:
+
+```bash
+cp .env.example .env
+cp config/dev/solana.yaml.example config/dev/solana.yaml
+cp config/dev/trading.yaml.example config/dev/trading.yaml
+```
+
+Do **not** commit `.env`, filled YAML, or `keystore.json`.
+
 ### Environment Variables
 
 Create a `.env` file based on `.env.example`:

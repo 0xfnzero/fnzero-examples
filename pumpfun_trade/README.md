@@ -73,11 +73,18 @@ Install Rust/Cargo: [https://rustup.rs](https://rustup.rs)
 
 ## Configuration
 
-- Copy `.env.example` to `.env` (`PRIVATE_KEY`, `SOLANA_RPC_URL`, …).
-- Copy `config/dev/solana.yaml.example` to `config/dev/solana.yaml`, enable SWQoS providers, set tokens.
-- Trading knobs live in `config/dev/trading.yaml`.
+**Before first run**, create local files from templates (do not commit; see repo root [README.md](../README.md) “Before you run & privacy”):
 
-For full wallet/SWQoS notes, see [pumpswap_trade/README.md](../pumpswap_trade/README.md) (only the protocol and mint requirements differ).
+```bash
+cp .env.example .env
+cp config/dev/solana.yaml.example config/dev/solana.yaml
+cp config/dev/trading.yaml.example config/dev/trading.yaml
+# For prod, copy config/prod/*.example as well
+```
+
+Then edit `.env` and YAML: `PRIVATE_KEY`, RPC, SWQoS tokens, `nonce_config`, etc. Trading params are in `trading.yaml`.
+
+For more wallet/SWQoS detail, see [pumpswap_trade/README.md](../pumpswap_trade/README.md) (protocol/mint requirements differ).
 
 ---
 

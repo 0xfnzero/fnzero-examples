@@ -74,11 +74,18 @@ cd fnzero-examples/pumpfun_trade
 
 ## 配置
 
-- 复制 `.env.example` → `.env`，填写 `PRIVATE_KEY`、`SOLANA_RPC_URL` 等。
-- 复制 `config/dev/solana.yaml.example` → `config/dev/solana.yaml`，启用 SWQoS 并填写 token。
-- 交易参数见 `config/dev/trading.yaml`（如 `buy_sol_amount`、滑点、Gas）。
+**运行前必做**：从模板生成本地文件（勿提交；见仓库根目录 [README_CN.md](../README_CN.md)「运行前准备与隐私」）：
 
-钱包与 SWQoS 详细说明可参考 [pumpswap_trade/README_CN.md](../pumpswap_trade/README_CN.md)（仅协议与 mint 要求不同）。
+```bash
+cp .env.example .env
+cp config/dev/solana.yaml.example config/dev/solana.yaml
+cp config/dev/trading.yaml.example config/dev/trading.yaml
+# prod 环境同理复制 config/prod/*.example
+```
+
+再编辑 `.env` 与 `yaml`：`PRIVATE_KEY`、`SOLANA_RPC_URL`、SWQoS `api_token`、`nonce_config` 等。交易参数在 `trading.yaml`（买入金额、滑点、Gas）。
+
+钱包与 SWQoS 细则可参考 [pumpswap_trade/README_CN.md](../pumpswap_trade/README_CN.md)（仅协议与 mint 不同）。
 
 ---
 

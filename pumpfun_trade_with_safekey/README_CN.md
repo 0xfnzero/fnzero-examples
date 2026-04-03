@@ -38,14 +38,23 @@ cargo run --release -- export <私钥或助记词> ../pumpfun_trade_with_safekey
 
 更完整的 keystore、SWQoS、nonce 说明见 [pumpswap_trade_with_safekey/README_CN.md](../pumpswap_trade_with_safekey/README_CN.md)（协议为 PumpSwap，配置结构相同）。
 
+## 运行前准备
+
+1. 按仓库根目录 [README_CN.md](../README_CN.md) 单独克隆 **sol-safekey** 并生成 `keystore.json`（本仓库不包含该目录）。
+2. 在本目录执行：
+
+```bash
+cp .env.example .env
+cp config/dev/solana.yaml.example config/dev/solana.yaml
+cp config/dev/trading.yaml.example config/dev/trading.yaml
+```
+
+3. 编辑 `solana.yaml`：`keystore_path`、SWQoS、nonce 等。`.env` / `yaml` **勿提交 Git**。
+
 ## 运行与构建
 
 ```bash
 cd pumpfun_trade_with_safekey
-cp .env.example .env
-cp config/dev/solana.yaml.example config/dev/solana.yaml
-# 编辑 solana.yaml：keystore_path、SWQoS、nonce 等
-
 ./run.sh <MINT_ADDRESS>
 ```
 

@@ -80,6 +80,19 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 ## 🛠️ 配置
 
+### 运行前必做（隐私）
+
+1. 单独克隆 [sol-safekey](https://github.com/0xfnzero/sol-safekey) 生成 `keystore.json`（本仓库不含该目录），见根目录 [README_CN.md](../README_CN.md)。
+2. 在本目录：
+
+```bash
+cp .env.example .env
+cp config/dev/solana.yaml.example config/dev/solana.yaml
+cp config/dev/trading.yaml.example config/dev/trading.yaml
+```
+
+编辑后**勿提交** `.env`、`solana.yaml`、`trading.yaml`、`keystore.json`。
+
 ### 环境变量
 
 根据 `.env.example` 创建 `.env` 文件：

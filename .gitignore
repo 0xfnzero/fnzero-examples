@@ -11,26 +11,9 @@ sol-safekey/
 sol-trade-sdk/
 solana-streamer/
 
-# 配置文件（保留 .example 文件作为模板）
+# 本地配置（仅提交 *.yaml.example 模板；运行前从模板复制并自行填写，勿提交含密钥的副本）
 **/solana.yaml
 **/trading.yaml
-
-!pumpswap_trade/config/dev/solana.yaml
-!pumpswap_trade/config/dev/trading.yaml
-!pumpswap_trade/config/prod/solana.yaml
-!pumpswap_trade/config/prod/trading.yaml
-!pumpswap_trade_with_safekey/config/dev/solana.yaml
-!pumpswap_trade_with_safekey/config/dev/trading.yaml
-!pumpswap_trade_with_safekey/config/prod/solana.yaml
-!pumpswap_trade_with_safekey/config/prod/trading.yaml
-!pumpfun_trade/config/dev/solana.yaml
-!pumpfun_trade/config/dev/trading.yaml
-!pumpfun_trade/config/prod/solana.yaml
-!pumpfun_trade/config/prod/trading.yaml
-!pumpfun_trade_with_safekey/config/dev/solana.yaml
-!pumpfun_trade_with_safekey/config/dev/trading.yaml
-!pumpfun_trade_with_safekey/config/prod/solana.yaml
-!pumpfun_trade_with_safekey/config/prod/trading.yaml
 
 # 密钥文件
 **/keystore.json

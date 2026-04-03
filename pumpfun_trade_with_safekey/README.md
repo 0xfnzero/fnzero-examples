@@ -36,14 +36,23 @@ Then point `keystore_path` in `pumpfun_trade_with_safekey/config/dev/solana.yaml
 
 For longer documentation (SWQoS, nonce, security), see [pumpswap_trade_with_safekey/README.md](../pumpswap_trade_with_safekey/README.md)—same layout, different protocol (PumpSwap).
 
+## Before you run
+
+1. Clone **[sol-safekey](https://github.com/0xfnzero/sol-safekey)** separately and export `keystore.json` (this repo does not vendor it)—see root [README.md](../README.md).
+2. In this crate:
+
+```bash
+cp .env.example .env
+cp config/dev/solana.yaml.example config/dev/solana.yaml
+cp config/dev/trading.yaml.example config/dev/trading.yaml
+```
+
+3. Edit YAML/`keystore_path`, SWQoS, nonce. **Do not commit** `.env` or filled YAML.
+
 ## Run & build
 
 ```bash
 cd pumpfun_trade_with_safekey
-cp .env.example .env
-cp config/dev/solana.yaml.example config/dev/solana.yaml
-# Edit solana.yaml: keystore_path, SWQoS, nonce, …
-
 ./run.sh <MINT_ADDRESS>
 ```
 
