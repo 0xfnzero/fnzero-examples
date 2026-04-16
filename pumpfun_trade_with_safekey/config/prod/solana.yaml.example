@@ -5,8 +5,8 @@
 # RPC 节点（本示例不使用 gRPC，仅用 RPC 获取 nonce 等）
 rpc_url: "https://api.mainnet-beta.solana.com"
 
-# 钱包与 lookup table
-keystore_path: "./keystore.json"
+# 钱包：keystore 与 solana.yaml 同目录（如 config/prod/keystore.json）
+keystore_path: "keystore.json"
 lookup_table_account: ""
 
 # Durable Nonce 账户：买卖可共用或分设；本示例仅通过 RPC 获取 nonce，无 gRPC 订阅
@@ -50,6 +50,7 @@ swqos:
     - provider: "Stellium"
       api_token: "YOUR_API_TOKEN_HERE"
       enabled: false
+    # Speedlanding / Soyas：api_token 须为机器人提供的 Solana keypair base58（与 Phantom 导出格式一致），用于 QUIC mTLS；填错会导致初始化失败。
     - provider: "Speedlanding"
       api_token: "YOUR_API_TOKEN_HERE"
       enabled: false

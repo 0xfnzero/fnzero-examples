@@ -34,6 +34,7 @@ pub async fn run_pumpfun_loop(
     sol_lamports: u64,
     buy_slippage_bps: u64,
     sell_slippage_bps: u64,
+    skip_trading: bool,
 ) -> anyhow::Result<()> {
     let payer_pubkey = client.get_payer_pubkey();
     let use_seed = true;
@@ -60,6 +61,23 @@ pub async fn run_pumpfun_loop(
             } else {
                 println!("[1c] 代币 ATA 不存在，买入时将按需创建");
             }
+        }
+
+        if skip_trading {
+            let balance = client
+                .get_payer_token_balance_with_program(&mint_pubkey, &pump_params.token_program)
+                .await
+                .unwrap_or(0);
+            println!(
+                "[2] 跳过买入/卖出（SKIP_TRADING）：当前该 mint 代币余额 = {}（未发交易）",
+                balance
+            );
+            if round < ROUNDS {
+                println!(
+                    "[*] 下一轮仍将跳过交易；去掉 SKIP_TRADING 后可恢复正常买卖"
+                );
+            }
+            continue;
         }
 
         println!("[2] 买入（PumpFun 内盘，同时发往所有已配置 SWQoS）...");
@@ -155,6 +173,13 @@ pub async fn run_pumpfun_loop(
         }
     }
 
-    println!("\n=== {} 轮全部完成 ===", ROUNDS);
+    if skip_trading {
+        println!(
+            "\n=== {} 轮：已跳过买卖，仅完成初始化与链上探测；修复后请取消 SKIP_TRADING ===",
+            ROUNDS
+        );
+    } else {
+        println!("\n=== {} 轮全部完成 ===", ROUNDS);
+    }
     Ok(())
 }

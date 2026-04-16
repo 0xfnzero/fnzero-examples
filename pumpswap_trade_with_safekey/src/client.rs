@@ -20,9 +20,11 @@ pub async fn create_client(
     let commitment = CommitmentConfig::confirmed();
     let swqos_count = swqos_configs.len();
     println!("  [create_client] 构建 TradeConfig（方式 C：末尾核 + 专用发送线程）...");
-    let trade_config = TradeConfig::new(rpc_url.to_string(), swqos_configs, commitment)
-        .with_wsol_ata_config(false, true)
-        .with_swqos_cores_from_end(true);
+    let trade_config = TradeConfig::builder(rpc_url.to_string(), swqos_configs, commitment)
+        .create_wsol_ata_on_startup(false)
+        .use_seed_optimize(true)
+        .swqos_cores_from_end(true)
+        .build();
     println!("  [create_client] 调用 SolanaTrade::new...");
     let client = SolanaTrade::new(payer, trade_config).await;
     let client = match recommended_sender_thread_core_indices(swqos_count) {

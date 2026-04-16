@@ -6,6 +6,9 @@ edition = "2021"
 [dependencies]
 sol-trade-sdk = { path = "../sol-trade-sdk" }
 solana-sdk = "4"
+# solana-message/solana-transaction 4.0 使用 wincode 0.4，与 solana-hash 4.3 的 wincode 0.5 冲突；4.1 已对齐
+solana-message = "4.1"
+solana-transaction = "4.1"
 solana-commitment-config = { version = "3", features = ["serde"] }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }

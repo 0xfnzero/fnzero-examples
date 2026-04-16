@@ -7,7 +7,7 @@
 //! - SOLANA_RPC_URL：RPC 地址（可被 config 覆盖）
 //! - BUY_SOL_AMOUNT：买入用 SOL 数量（浮点，如 0.01，默认 0.01）
 //! - KEYSTORE_PASSWORD：keystore.json 密码（可选，不设则运行时交互输入）
-//! - CONFIG_FILE / APP_ENV：配置路径或环境(dev/prod)，见 config/dev|prod/solana.yaml
+//! - CONFIG_FILE / APP_ENV：配置路径或环境(dev/prod)，见 config/dev|prod/solana.yaml（未设置 APP_ENV 时默认为 dev，读 config/dev/solana.yaml；生产配置请用 APP_ENV=prod）
 //! - NONCE_ACCOUNT：多 SWQoS 时 durable nonce 可由此指定；若已在 solana.yaml 的 nonce_config 中配置则无需设置
 //!
 //! 钱包：优先使用 config 中 keystore_path 指向的 keystore.json，运行时需输入密码（或 KEYSTORE_PASSWORD）。
@@ -28,7 +28,7 @@ use sol_trade_sdk::{
 use solana_sdk::native_token::LAMPORTS_PER_SOL;
 use solana_sdk::signature::Keypair;
 use solana_sdk::pubkey::Pubkey;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -44,15 +44,27 @@ async fn main() -> anyhow::Result<()> {
         .or_else(|| std::env::var("MINT").ok())
         .expect("用法: pumpswap_trade_with_safekey <MINT> 或设置 MINT 环境变量");
 
-    let config_path = resolve_config_path();
-    let trading_path = {
-        let config_dir = Path::new(&config_path).parent().unwrap_or_else(|| Path::new("."));
-        let path = config_dir.join("trading.yaml");
-        path.to_str().unwrap_or("trading.yaml").to_string()
-    };
+    let config_path_raw = resolve_config_path();
+    let config_path = absolutize_config_path(&config_path_raw);
+    let trading_path = config_path
+        .parent()
+        .map(|d| d.join("trading.yaml"))
+        .unwrap_or_else(|| PathBuf::from("trading.yaml"));
 
     let (mut rpc_url, swqos_configs, keystore_path, nonce_config, trading_config) =
         load_config(&config_path, &trading_path)?;
+    let keystore_path = resolve_keystore_path(&config_path, &keystore_path);
+
+    println!("  配置文件: {}", config_path.display());
+    println!(
+        "  APP_ENV: {}",
+        std::env::var("APP_ENV").unwrap_or_else(|_| "dev (默认)".to_string())
+    );
+    if swqos_configs.len() == 1 && matches!(swqos_configs[0], SwqosConfig::Default(_)) {
+        eprintln!(
+            "  提示: 当前 SWQoS 仅为 Default（RPC）。若你在 config/prod/solana.yaml 中启用了 Speedlanding 等，请使用生产配置: APP_ENV=prod 或 CONFIG_FILE=<项目根>/config/prod/solana.yaml"
+        );
+    }
 
     if let Ok(url) = std::env::var("SOLANA_RPC_URL") {
         let url = url.trim();
@@ -230,9 +242,34 @@ fn resolve_config_path() -> String {
     })
 }
 
+fn absolutize_config_path(config_file: &str) -> PathBuf {
+    let p = Path::new(config_file);
+    let joined = if p.is_absolute() {
+        p.to_path_buf()
+    } else {
+        std::env::current_dir()
+            .unwrap_or_else(|_| PathBuf::from("."))
+            .join(p)
+    };
+    std::fs::canonicalize(&joined).unwrap_or(joined)
+}
+
+fn resolve_keystore_path(config_file: &Path, keystore_from_yaml: &str) -> String {
+    let s = keystore_from_yaml.trim();
+    if s.is_empty() {
+        return String::new();
+    }
+    let p = Path::new(s);
+    if p.is_absolute() {
+        return s.to_string();
+    }
+    let base = config_file.parent().unwrap_or_else(|| Path::new("."));
+    base.join(p).to_string_lossy().into_owned()
+}
+
 fn load_config(
-    config_path: &str,
-    trading_path: &str,
+    config_path: &Path,
+    trading_path: &Path,
 ) -> anyhow::Result<(
     String,
     Vec<SwqosConfig>,
@@ -240,7 +277,7 @@ fn load_config(
     Option<config::NonceConfig>,
     Option<config::TradingConfig>,
 )> {
-    if !Path::new(config_path).exists() {
+    if !config_path.exists() {
         let rpc_url = std::env::var("SOLANA_RPC_URL")
             .unwrap_or_else(|_| "https://api.mainnet-beta.solana.com".to_string());
         let configs = vec![SwqosConfig::Default(rpc_url.clone())];
@@ -248,13 +285,17 @@ fn load_config(
         return Ok((rpc_url, configs, keystore, None, None));
     }
 
-    let cfg = config::load_solana_config(Path::new(config_path))?;
+    let cfg = config::load_solana_config(config_path)?;
     let configs = swqos::build_swqos_configs(&cfg);
-    println!("  已加载 {} 个 SWQoS 配置: {}", config_path, configs.len());
+    println!(
+        "  已加载 {} 个 SWQoS 配置: {}",
+        config_path.display(),
+        configs.len()
+    );
 
-    let trading_cfg = config::load_trading_config(Path::new(trading_path));
+    let trading_cfg = config::load_trading_config(trading_path);
     if trading_cfg.is_some() {
-        println!("  已加载交易与 Gas 费配置: {}", trading_path);
+        println!("  已加载交易与 Gas 费配置: {}", trading_path.display());
     }
 
     Ok((

@@ -5,8 +5,8 @@
 # RPC 节点（本示例不使用 gRPC，仅用 RPC 获取 nonce 等）
 rpc_url: "https://api.mainnet-beta.solana.com"
 
-# 钱包：keystore 路径；lookup_table 用于交易优化（空则不使用）
-keystore_path: "./keystore.json"
+# 钱包：与 solana.yaml 同目录（如 config/dev/keystore.json）；lookup_table 用于交易优化（空则不使用）
+keystore_path: "keystore.json"
 lookup_table_account: ""
 
 # Durable Nonce 账户：买卖可共用或分设；本示例仅通过 RPC 获取 nonce，无 gRPC 订阅

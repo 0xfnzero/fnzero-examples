@@ -10,7 +10,7 @@
 # 环境变量: APP_ENV, MINT, PRIVATE_KEY, SOLANA_RPC_URL 等同 run.sh
 # =============================================================================
 
-DEFAULT_MINT="Cm6fNnMk7NfzStP9CZpsQA2v3jjzbcYGAxdJySmHpump"
+DEFAULT_MINT="Ce2gx9KGXJ6C9Mp5b5x1sn9Mg87JwEbrQby4Zqo3pump"
 BINARY_NAME="pumpswap_trade"
 
 set -euo pipefail

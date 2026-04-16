@@ -8,7 +8,7 @@
 #   MINT=xxx ./run.sh            # 或通过环境变量
 #
 # 默认 mint（无参数且交互时直接回车）:
-#   Cm6fNnMk7NfzStP9CZpsQA2v3jjzbcYGAxdJySmHpump
+#   Ce2gx9KGXJ6C9Mp5b5x1sn9Mg87JwEbrQby4Zqo3pump
 #
 # 环境变量（可选）:
 #   APP_ENV=dev|prod    默认 dev，决定读取 config/dev 或 config/prod
@@ -18,7 +18,7 @@
 # =============================================================================
 
 # 默认 mint 地址（无参数且交互回车时使用）
-DEFAULT_MINT="Cm6fNnMk7NfzStP9CZpsQA2v3jjzbcYGAxdJySmHpump"
+DEFAULT_MINT="Ce2gx9KGXJ6C9Mp5b5x1sn9Mg87JwEbrQby4Zqo3pump"
 
 set -euo pipefail
 
