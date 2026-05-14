@@ -9,8 +9,8 @@
 //! - **SKIP_TRADING** / **PAUSE_TRADING**：设为 `1`、`true`、`yes` 时仅执行初始化与链上探测（含 bonding curve、nonce、run 内 ATA 等），**不发送买入/卖出交易**（用于修复 SWQoS 等期间避免实盘）
 //! - KEYSTORE_PASSWORD：keystore.json 密码（可选，不设则运行时交互输入）
 
-mod config;
 mod client;
+mod config;
 mod keypair;
 mod run;
 mod swqos;
@@ -31,6 +31,14 @@ use std::sync::Arc;
 const DEFAULT_BUY_SOL_AMOUNT: f64 = 0.01;
 const CLIENT_INIT_TIMEOUT_SECS: u64 = 90;
 
+struct LoadedConfig {
+    rpc_url: String,
+    swqos_configs: Vec<SwqosConfig>,
+    keystore_path: String,
+    nonce_config: Option<config::NonceConfig>,
+    trading_config: Option<config::TradingConfig>,
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     load_dotenv();
@@ -47,8 +55,14 @@ async fn main() -> anyhow::Result<()> {
         .map(|d| d.join("trading.yaml"))
         .unwrap_or_else(|| PathBuf::from("trading.yaml"));
 
-    let (mut rpc_url, swqos_configs, keystore_path, nonce_config, trading_config) =
-        load_config(&config_path, &trading_path)?;
+    let loaded_config = load_config(&config_path, &trading_path)?;
+    let LoadedConfig {
+        mut rpc_url,
+        swqos_configs,
+        keystore_path,
+        nonce_config,
+        trading_config,
+    } = loaded_config;
     let keystore_path = resolve_keystore_path(&config_path, &keystore_path);
 
     println!("  配置文件: {}", config_path.display());
@@ -75,7 +89,11 @@ async fn main() -> anyhow::Result<()> {
     let buy_sol_amount: f64 = trading_config
         .as_ref()
         .map(|t| t.buy_sol_amount)
-        .or_else(|| std::env::var("BUY_SOL_AMOUNT").ok().and_then(|s| s.trim().parse().ok()))
+        .or_else(|| {
+            std::env::var("BUY_SOL_AMOUNT")
+                .ok()
+                .and_then(|s| s.trim().parse().ok())
+        })
         .unwrap_or(DEFAULT_BUY_SOL_AMOUNT);
     let sol_lamports = (buy_sol_amount * LAMPORTS_PER_SOL as f64).round() as u64;
 
@@ -120,16 +138,14 @@ async fn main() -> anyhow::Result<()> {
     };
     println!("[0] ✓ 交易客户端创建完成");
 
-    let env_nonce = std::env::var("NONCE_ACCOUNT")
-        .ok()
-        .and_then(|s| {
-            let t = s.trim();
-            if t.is_empty() {
-                None
-            } else {
-                Some(t.to_string())
-            }
-        });
+    let env_nonce = std::env::var("NONCE_ACCOUNT").ok().and_then(|s| {
+        let t = s.trim();
+        if t.is_empty() {
+            None
+        } else {
+            Some(t.to_string())
+        }
+    });
 
     let (durable_nonce_buy, durable_nonce_sell) = if swqos_count > 1 {
         let buy_str = nonce_config
@@ -190,20 +206,28 @@ async fn main() -> anyhow::Result<()> {
         })?;
     println!("[1] ✓ bonding curve 就绪（DexType::PumpFun）");
 
-    let buy_slippage_bps = trading_config.as_ref().map(|t| t.buy_slippage_bps).unwrap_or(500);
-    let sell_slippage_bps = trading_config.as_ref().map(|t| t.sell_slippage_bps).unwrap_or(9980);
+    let buy_slippage_bps = trading_config
+        .as_ref()
+        .map(|t| t.buy_slippage_bps)
+        .unwrap_or(500);
+    let sell_slippage_bps = trading_config
+        .as_ref()
+        .map(|t| t.sell_slippage_bps)
+        .unwrap_or(9980);
 
     run::run_pumpfun_loop(
         &client,
         mint_pubkey,
-        trading_config.as_ref(),
-        &swqos_types,
-        durable_nonce_buy,
-        durable_nonce_sell,
-        sol_lamports,
-        buy_slippage_bps,
-        sell_slippage_bps,
-        skip_trading,
+        run::PumpFunRunConfig {
+            trading_config: trading_config.as_ref(),
+            swqos_types: &swqos_types,
+            durable_nonce_buy,
+            durable_nonce_sell,
+            sol_lamports,
+            buy_slippage_bps,
+            sell_slippage_bps,
+            skip_trading,
+        },
     )
     .await
 }
@@ -287,22 +311,19 @@ fn resolve_keystore_path(config_file: &Path, keystore_from_yaml: &str) -> String
     base.join(p).to_string_lossy().into_owned()
 }
 
-fn load_config(
-    config_path: &Path,
-    trading_path: &Path,
-) -> anyhow::Result<(
-    String,
-    Vec<SwqosConfig>,
-    String,
-    Option<config::NonceConfig>,
-    Option<config::TradingConfig>,
-)> {
+fn load_config(config_path: &Path, trading_path: &Path) -> anyhow::Result<LoadedConfig> {
     if !config_path.exists() {
         let rpc_url = std::env::var("SOLANA_RPC_URL")
             .unwrap_or_else(|_| "https://api.mainnet-beta.solana.com".to_string());
-        let configs = vec![SwqosConfig::Default(rpc_url.clone())];
-        let keystore = std::env::var("KEYSTORE_PATH").unwrap_or_default();
-        return Ok((rpc_url, configs, keystore, None, None));
+        let swqos_configs = vec![SwqosConfig::Default(rpc_url.clone())];
+        let keystore_path = std::env::var("KEYSTORE_PATH").unwrap_or_default();
+        return Ok(LoadedConfig {
+            rpc_url,
+            swqos_configs,
+            keystore_path,
+            nonce_config: None,
+            trading_config: None,
+        });
     }
 
     let cfg = config::load_solana_config(config_path)?;
@@ -318,19 +339,21 @@ fn load_config(
         println!("  已加载交易与 Gas 费配置: {}", trading_path.display());
     }
 
-    Ok((
-        cfg.rpc_url,
-        configs,
-        cfg.keystore_path,
-        cfg.nonce_config,
-        trading_cfg,
-    ))
+    Ok(LoadedConfig {
+        rpc_url: cfg.rpc_url,
+        swqos_configs: configs,
+        keystore_path: cfg.keystore_path,
+        nonce_config: cfg.nonce_config,
+        trading_config: trading_cfg,
+    })
 }
 
 fn load_payer(keystore_path: &str) -> anyhow::Result<Arc<Keypair>> {
     if !keystore_path.trim().is_empty() {
         println!("  使用 keystore: {}", keystore_path.trim());
-        Ok(Arc::new(keypair::load_keypair_from_keystore(keystore_path.trim())?))
+        Ok(Arc::new(keypair::load_keypair_from_keystore(
+            keystore_path.trim(),
+        )?))
     } else {
         let keypair_b58 = std::env::var("KEYPAIR_BASE58").map_err(|_| {
             anyhow::anyhow!(

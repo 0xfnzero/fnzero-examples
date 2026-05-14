@@ -47,9 +47,15 @@ pub struct TradingConfig {
     pub gas_fee: GasFeeConfig,
 }
 
-fn default_buy_sol_amount() -> f64 { 0.01 }
-fn default_buy_slippage_bps() -> u64 { 500 }
-fn default_sell_slippage_bps() -> u64 { 9980 }
+fn default_buy_sol_amount() -> f64 {
+    0.01
+}
+fn default_buy_slippage_bps() -> u64 {
+    500
+}
+fn default_sell_slippage_bps() -> u64 {
+    9980
+}
 
 #[derive(serde::Deserialize)]
 pub struct GasFeeConfig {
@@ -101,19 +107,45 @@ impl Default for GasFeeConfig {
     }
 }
 
-fn default_cu_limit() -> u32 { 200000 }
-fn default_buy_cu_limit() -> u32 { 98467 }
-fn default_sell_cu_limit() -> u32 { 93334 }
-fn default_buy_cu_price() -> u64 { 12868833 }
-fn default_sell_cu_price() -> u64 { 120000 }
-fn default_global_buy_tip() -> f64 { 0.00115 }
-fn default_global_sell_tip() -> f64 { 0.00015 }
-fn default_low_cu_price() -> u64 { 400000 }
-fn default_low_buy_tip() -> f64 { 0.003 }
-fn default_low_sell_tip() -> f64 { 0.001 }
-fn default_high_cu_price() -> u64 { 180000 }
-fn default_high_buy_tip() -> f64 { 0.003 }
-fn default_high_sell_tip() -> f64 { 0.001 }
+fn default_cu_limit() -> u32 {
+    200000
+}
+fn default_buy_cu_limit() -> u32 {
+    98467
+}
+fn default_sell_cu_limit() -> u32 {
+    93334
+}
+fn default_buy_cu_price() -> u64 {
+    12868833
+}
+fn default_sell_cu_price() -> u64 {
+    120000
+}
+fn default_global_buy_tip() -> f64 {
+    0.00115
+}
+fn default_global_sell_tip() -> f64 {
+    0.00015
+}
+fn default_low_cu_price() -> u64 {
+    400000
+}
+fn default_low_buy_tip() -> f64 {
+    0.003
+}
+fn default_low_sell_tip() -> f64 {
+    0.001
+}
+fn default_high_cu_price() -> u64 {
+    180000
+}
+fn default_high_buy_tip() -> f64 {
+    0.003
+}
+fn default_high_sell_tip() -> f64 {
+    0.001
+}
 
 /// 从路径加载 solana.yaml
 pub fn load_solana_config(config_path: &Path) -> anyhow::Result<SolanaConfig> {

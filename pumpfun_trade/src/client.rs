@@ -29,7 +29,10 @@ pub async fn create_client(
     let client = SolanaTrade::new(payer, trade_config).await;
     let client = match recommended_sender_thread_core_indices(swqos_count) {
         Some(indices) => {
-            println!("  [create_client] 启用专用发送线程并绑定末尾 {} 核", indices.len());
+            println!(
+                "  [create_client] 启用专用发送线程并绑定末尾 {} 核",
+                indices.len()
+            );
             client.with_dedicated_sender_threads(Some(indices))
         }
         None => client,

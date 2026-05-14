@@ -19,8 +19,8 @@ pub fn load_keypair_from_keystore(keystore_path: &str) -> anyhow::Result<Keypair
         );
     }
 
-    let content = std::fs::read_to_string(path)
-        .map_err(|e| anyhow::anyhow!("读取 keystore 失败: {}", e))?;
+    let content =
+        std::fs::read_to_string(path).map_err(|e| anyhow::anyhow!("读取 keystore 失败: {}", e))?;
 
     if content.contains("encrypted_private_key") {
         let keypair = match std::env::var("KEYSTORE_PASSWORD") {
@@ -30,10 +30,8 @@ pub fn load_keypair_from_keystore(keystore_path: &str) -> anyhow::Result<Keypair
                 sol_safekey::KeyManager::keypair_from_encrypted_json(&content, &pwd)
                     .map_err(|e| anyhow::anyhow!("密码错误或钱包文件损坏: {}", e))?
             }
-            _ => {
-                sol_safekey::bot_helper::ensure_wallet_ready(keystore_path)
-                    .map_err(|e| anyhow::anyhow!("密码错误或钱包文件损坏: {}", e))?
-            }
+            _ => sol_safekey::bot_helper::ensure_wallet_ready(keystore_path)
+                .map_err(|e| anyhow::anyhow!("密码错误或钱包文件损坏: {}", e))?,
         };
         println!("  钱包地址: {}", keypair.pubkey());
         return Ok(keypair);
@@ -42,7 +40,10 @@ pub fn load_keypair_from_keystore(keystore_path: &str) -> anyhow::Result<Keypair
     if let Ok(bytes) = serde_json::from_str::<Vec<u8>>(&content) {
         if bytes.len() == 64 {
             if let Ok(k) = Keypair::try_from(bytes.as_slice()) {
-                println!("  钱包地址: {}（已按标准密钥 JSON 加载，未加密）", k.pubkey());
+                println!(
+                    "  钱包地址: {}（已按标准密钥 JSON 加载，未加密）",
+                    k.pubkey()
+                );
                 return Ok(k);
             }
         }

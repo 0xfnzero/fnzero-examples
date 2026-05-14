@@ -22,21 +22,38 @@ const REST_SECS: u64 = 30;
 /// 买→休息→卖→休息 的循环次数
 const ROUNDS: u32 = 1;
 
-pub const fn rest_secs() -> u64 { REST_SECS }
-pub const fn rounds() -> u32 { ROUNDS }
+pub const fn rest_secs() -> u64 {
+    REST_SECS
+}
+pub const fn rounds() -> u32 {
+    ROUNDS
+}
+
+pub struct PumpSwapRunConfig<'a> {
+    pub trading_config: Option<&'a TradingConfig>,
+    pub swqos_types: &'a [SwqosType],
+    pub durable_nonce_buy: Option<DurableNonceInfo>,
+    pub durable_nonce_sell: Option<DurableNonceInfo>,
+    pub sol_lamports: u64,
+    pub buy_slippage_bps: u64,
+    pub sell_slippage_bps: u64,
+}
 
 pub async fn run_pumpswap_loop(
     client: &SolanaTrade,
     mint_pubkey: Pubkey,
     pool: Pubkey,
-    trading_config: Option<&TradingConfig>,
-    swqos_types: &[SwqosType],
-    durable_nonce_buy: Option<DurableNonceInfo>,
-    durable_nonce_sell: Option<DurableNonceInfo>,
-    sol_lamports: u64,
-    buy_slippage_bps: u64,
-    sell_slippage_bps: u64,
+    run_config: PumpSwapRunConfig<'_>,
 ) -> anyhow::Result<()> {
+    let PumpSwapRunConfig {
+        trading_config,
+        swqos_types,
+        durable_nonce_buy,
+        durable_nonce_sell,
+        sol_lamports,
+        buy_slippage_bps,
+        sell_slippage_bps,
+    } = run_config;
     let payer_pubkey = client.get_payer_pubkey();
     let use_seed = true;
 
@@ -54,7 +71,12 @@ pub async fn run_pumpswap_loop(
             &pool_params.base_token_program,
             use_seed,
         );
-        let mint_ata_exists = client.infrastructure.rpc.get_account(&mint_ata).await.is_ok();
+        let mint_ata_exists = client
+            .infrastructure
+            .rpc
+            .get_account(&mint_ata)
+            .await
+            .is_ok();
         let create_mint_ata = !mint_ata_exists;
         if round == 1 {
             if mint_ata_exists {
@@ -87,7 +109,10 @@ pub async fn run_pumpswap_loop(
         };
         let (ok, sigs, err, _) = client.buy(buy_params).await?;
         if !ok {
-            let e = err.as_ref().map(|e| e.to_string()).unwrap_or_else(|| "unknown".to_string());
+            let e = err
+                .as_ref()
+                .map(|e| e.to_string())
+                .unwrap_or_else(|| "unknown".to_string());
             anyhow::bail!("第 {} 轮买入失败: {} | sigs: {:?}", round, e, sigs);
         }
         println!("    买入成功: {:?}", sigs);
@@ -108,7 +133,10 @@ pub async fn run_pumpswap_loop(
                 match fetch_nonce_info(&client.infrastructure.rpc, nonce_account).await {
                     Some(fresh) => Some(fresh),
                     None => {
-                        anyhow::bail!("无法获取 durable nonce 账户 {} 的最新状态，交易可能失败", nonce_account);
+                        anyhow::bail!(
+                            "无法获取 durable nonce 账户 {} 的最新状态，交易可能失败",
+                            nonce_account
+                        );
                     }
                 }
             } else {
@@ -144,7 +172,10 @@ pub async fn run_pumpswap_loop(
         };
         let (ok, sigs, err, _) = client.sell(sell_params).await?;
         if !ok {
-            let e = err.as_ref().map(|e| e.to_string()).unwrap_or_else(|| "unknown".to_string());
+            let e = err
+                .as_ref()
+                .map(|e| e.to_string())
+                .unwrap_or_else(|| "unknown".to_string());
             anyhow::bail!("第 {} 轮卖出失败: {} | sigs: {:?}", round, e, sigs);
         }
         println!("    卖出成功: {:?}", sigs);

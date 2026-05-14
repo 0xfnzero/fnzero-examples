@@ -10,8 +10,8 @@
 //! - CONFIG_FILE / APP_ENV：配置路径或环境(dev/prod)，见 config/dev|prod/solana.yaml
 //! - NONCE_ACCOUNT：多 SWQoS 时 durable nonce 可由此指定；若已在 solana.yaml 的 nonce_config 中配置则无需设置
 
-mod config;
 mod client;
+mod config;
 mod keypair;
 mod run;
 mod swqos;
@@ -31,6 +31,14 @@ use std::sync::Arc;
 const DEFAULT_BUY_SOL_AMOUNT: f64 = 0.01;
 const CLIENT_INIT_TIMEOUT_SECS: u64 = 90;
 
+struct LoadedConfig {
+    rpc_url: String,
+    swqos_configs: Vec<SwqosConfig>,
+    private_key: String,
+    nonce_config: Option<config::NonceConfig>,
+    trading_config: Option<config::TradingConfig>,
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     load_dotenv();
@@ -42,13 +50,21 @@ async fn main() -> anyhow::Result<()> {
 
     let config_path = resolve_config_path();
     let trading_path = {
-        let config_dir = Path::new(&config_path).parent().unwrap_or_else(|| Path::new("."));
+        let config_dir = Path::new(&config_path)
+            .parent()
+            .unwrap_or_else(|| Path::new("."));
         let path = config_dir.join("trading.yaml");
         path.to_str().unwrap_or("trading.yaml").to_string()
     };
 
-    let (mut rpc_url, swqos_configs, private_key, nonce_config, trading_config) =
-        load_config(&config_path, &trading_path)?;
+    let loaded_config = load_config(&config_path, &trading_path)?;
+    let LoadedConfig {
+        mut rpc_url,
+        swqos_configs,
+        private_key,
+        nonce_config,
+        trading_config,
+    } = loaded_config;
 
     if let Ok(url) = std::env::var("SOLANA_RPC_URL") {
         let url = url.trim();
@@ -63,7 +79,11 @@ async fn main() -> anyhow::Result<()> {
     let buy_sol_amount: f64 = trading_config
         .as_ref()
         .map(|t| t.buy_sol_amount)
-        .or_else(|| std::env::var("BUY_SOL_AMOUNT").ok().and_then(|s| s.trim().parse().ok()))
+        .or_else(|| {
+            std::env::var("BUY_SOL_AMOUNT")
+                .ok()
+                .and_then(|s| s.trim().parse().ok())
+        })
         .unwrap_or(DEFAULT_BUY_SOL_AMOUNT);
     let sol_lamports = (buy_sol_amount * LAMPORTS_PER_SOL as f64).round() as u64;
 
@@ -103,16 +123,14 @@ async fn main() -> anyhow::Result<()> {
     };
     println!("[0] ✓ 交易客户端创建完成");
 
-    let env_nonce = std::env::var("NONCE_ACCOUNT")
-        .ok()
-        .and_then(|s| {
-            let t = s.trim();
-            if t.is_empty() {
-                None
-            } else {
-                Some(t.to_string())
-            }
-        });
+    let env_nonce = std::env::var("NONCE_ACCOUNT").ok().and_then(|s| {
+        let t = s.trim();
+        if t.is_empty() {
+            None
+        } else {
+            Some(t.to_string())
+        }
+    });
 
     let (durable_nonce_buy, durable_nonce_sell) = if swqos_count > 1 {
         let buy_str = nonce_config
@@ -173,19 +191,27 @@ async fn main() -> anyhow::Result<()> {
         })?;
     println!("[1] ✓ bonding curve 就绪（DexType::PumpFun）");
 
-    let buy_slippage_bps = trading_config.as_ref().map(|t| t.buy_slippage_bps).unwrap_or(500);
-    let sell_slippage_bps = trading_config.as_ref().map(|t| t.sell_slippage_bps).unwrap_or(9980);
+    let buy_slippage_bps = trading_config
+        .as_ref()
+        .map(|t| t.buy_slippage_bps)
+        .unwrap_or(500);
+    let sell_slippage_bps = trading_config
+        .as_ref()
+        .map(|t| t.sell_slippage_bps)
+        .unwrap_or(9980);
 
     run::run_pumpfun_loop(
         &client,
         mint_pubkey,
-        trading_config.as_ref(),
-        &swqos_types,
-        durable_nonce_buy,
-        durable_nonce_sell,
-        sol_lamports,
-        buy_slippage_bps,
-        sell_slippage_bps,
+        run::PumpFunRunConfig {
+            trading_config: trading_config.as_ref(),
+            swqos_types: &swqos_types,
+            durable_nonce_buy,
+            durable_nonce_sell,
+            sol_lamports,
+            buy_slippage_bps,
+            sell_slippage_bps,
+        },
     )
     .await
 }
@@ -231,22 +257,19 @@ fn resolve_config_path() -> String {
     })
 }
 
-fn load_config(
-    config_path: &str,
-    trading_path: &str,
-) -> anyhow::Result<(
-    String,
-    Vec<SwqosConfig>,
-    String,
-    Option<config::NonceConfig>,
-    Option<config::TradingConfig>,
-)> {
+fn load_config(config_path: &str, trading_path: &str) -> anyhow::Result<LoadedConfig> {
     if !Path::new(config_path).exists() {
         let rpc_url = std::env::var("SOLANA_RPC_URL")
             .unwrap_or_else(|_| "https://api.mainnet-beta.solana.com".to_string());
-        let configs = vec![SwqosConfig::Default(rpc_url.clone())];
+        let swqos_configs = vec![SwqosConfig::Default(rpc_url.clone())];
         let private_key = std::env::var("PRIVATE_KEY").unwrap_or_default();
-        return Ok((rpc_url, configs, private_key, None, None));
+        return Ok(LoadedConfig {
+            rpc_url,
+            swqos_configs,
+            private_key,
+            nonce_config: None,
+            trading_config: None,
+        });
     }
 
     let cfg = config::load_solana_config(Path::new(config_path))?;
@@ -258,20 +281,22 @@ fn load_config(
         println!("  已加载交易与 Gas 费配置: {}", trading_path);
     }
 
-    Ok((
-        cfg.rpc_url,
-        configs,
-        cfg.private_key,
-        cfg.nonce_config,
-        trading_cfg,
-    ))
+    Ok(LoadedConfig {
+        rpc_url: cfg.rpc_url,
+        swqos_configs: configs,
+        private_key: cfg.private_key,
+        nonce_config: cfg.nonce_config,
+        trading_config: trading_cfg,
+    })
 }
 
 fn load_payer(private_key: &str) -> anyhow::Result<Arc<Keypair>> {
     let config_private_key = private_key.trim();
     if !config_private_key.is_empty() {
         println!("  使用配置文件中的私钥");
-        return Ok(Arc::new(keypair::load_keypair_from_string(config_private_key)?));
+        return Ok(Arc::new(keypair::load_keypair_from_string(
+            config_private_key,
+        )?));
     }
 
     let env_private_key = std::env::var("PRIVATE_KEY").map_err(|_| {
