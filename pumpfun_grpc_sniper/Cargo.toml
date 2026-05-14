@@ -1,0 +1,27 @@
+[package]
+name = "pumpfun_grpc_sniper"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sol-trade-sdk = "4.0.8"
+sol-parser-sdk = "0.4.4"
+solana-sdk = "3.0.0"
+solana-commitment-config = { version = "3.1.1", features = ["serde"] }
+tokio = { version = "1", features = ["full"] }
+anyhow = "1"
+dotenvy = "0.15"
+serde_json = "1"
+rustls = { version = "0.23", features = ["ring"] }
+openssl = { version = "0.10.73", features = ["vendored"] }
+# sol-parser-sdk 0.4.4 builds against the 12.1 protobuf shape. Newer 12.x
+# yellowstone-grpc-proto adds fields that 0.4.4 does not initialize.
+yellowstone-grpc-proto = "=12.1.0"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 4
+panic = "abort"
+strip = true
+incremental = false

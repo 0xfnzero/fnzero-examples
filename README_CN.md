@@ -72,6 +72,8 @@ fnzero-examples/
 ├── pumpswap_trade_with_safekey/ # PumpSwap 外盘交易示例（加密密钥库）
 ├── pumpfun_trade/               # PumpFun 内盘交易示例（直接私钥）
 ├── pumpfun_trade_with_safekey/  # PumpFun 内盘交易示例（加密密钥库）
+├── pumpfun_grpc_sniper/         # PumpFun gRPC 监听狙击示例（直接私钥）
+├── pumpfun_shredstream_sniper/  # PumpFun ShredStream 监听狙击示例（直接私钥）
 ├── sol-trade-sdk/              # 统一 DEX 交易 SDK
 ├── sol-parser-sdk/             # 交易解析 SDK（gRPC 流式处理）
 ├── sol-safekey/                # 加密密钥管理库
@@ -90,6 +92,8 @@ fnzero-examples/
 | **PumpSwap 交易（加密）** | 同上，但使用带密码保护的加密密钥库文件 | `./run.sh` | [pumpswap_trade_with_safekey](./pumpswap_trade_with_safekey/) |
 | **PumpFun 交易** | PumpFun 内盘（bonding curve）买→等→卖，代币须未毕业到 PumpSwap | `./run.sh` | [pumpfun_trade](./pumpfun_trade/) |
 | **PumpFun 交易（加密）** | 同上，keystore / `KEYPAIR_BASE58` | `./run.sh` | [pumpfun_trade_with_safekey](./pumpfun_trade_with_safekey/) |
+| **PumpFun gRPC 狙击** | 通过 `sol-parser-sdk` gRPC 监听创建者首次买入，只买 1 笔，3 秒后自动卖出 | `./run.sh` | [pumpfun_grpc_sniper](./pumpfun_grpc_sniper/) |
+| **PumpFun ShredStream 狙击** | 通过 `sol-parser-sdk` ShredStream 监听创建者首次买入，只买 1 笔，3 秒后自动卖出 | `./run.sh` | [pumpfun_shredstream_sniper](./pumpfun_shredstream_sniper/) |
 
 ### 如何选择示例
 
@@ -99,8 +103,10 @@ fnzero-examples/
 | 代币已在 **PumpSwap 外盘** AMM | `pumpswap_trade` 或 `pumpswap_trade_with_safekey` |
 | 私钥通过 `PRIVATE_KEY` 或 `solana.yaml` 的 `private_key` | `pumpfun_trade` / `pumpswap_trade` |
 | 加密 **keystore** + 密码（或备用 `KEYPAIR_BASE58`） | `pumpfun_trade_with_safekey` / `pumpswap_trade_with_safekey` |
+| 监听 gRPC 交易流狙击 PumpFun 新币 | `pumpfun_grpc_sniper` |
+| 监听 ShredStream 外层指令狙击 PumpFun 新币 | `pumpfun_shredstream_sniper` |
 
-### 示例特性（四个交易示例共通）
+### 示例特性（四个循环交易示例共通）
 
 - ✅ **自动化流程**: 买入 → 等待约 30 秒 → 卖出；**默认执行 1 轮**（可在各示例 `src/run.rs` 中修改 `ROUNDS`、`REST_SECS`）
 - ✅ **多 SWQoS**: 多个 MEV 保护通道并发提交
@@ -118,6 +124,8 @@ fnzero-examples/
 | PumpSwap（加密） | [pumpswap_trade_with_safekey/README_CN.md](./pumpswap_trade_with_safekey/README_CN.md) | [pumpswap_trade_with_safekey/README.md](./pumpswap_trade_with_safekey/README.md) |
 | PumpFun（私钥） | [pumpfun_trade/README_CN.md](./pumpfun_trade/README_CN.md) | [pumpfun_trade/README.md](./pumpfun_trade/README.md) |
 | PumpFun（加密） | [pumpfun_trade_with_safekey/README_CN.md](./pumpfun_trade_with_safekey/README_CN.md) | [pumpfun_trade_with_safekey/README.md](./pumpfun_trade_with_safekey/README.md) |
+| PumpFun gRPC 狙击 | [pumpfun_grpc_sniper/README_CN.md](./pumpfun_grpc_sniper/README_CN.md) | [pumpfun_grpc_sniper/README.md](./pumpfun_grpc_sniper/README.md) |
+| PumpFun ShredStream 狙击 | [pumpfun_shredstream_sniper/README_CN.md](./pumpfun_shredstream_sniper/README_CN.md) | [pumpfun_shredstream_sniper/README.md](./pumpfun_shredstream_sniper/README.md) |
 
 ### 配置说明
 
@@ -229,7 +237,14 @@ cp config/dev/trading.yaml.example config/dev/trading.yaml
 # 若使用生产配置，同样复制 config/prod/*.example → config/prod/*.yaml
 ```
 
-然后**本地编辑**（勿提交）：
+`pumpfun_grpc_sniper` 与 `pumpfun_shredstream_sniper` 只使用 `.env`，不需要 YAML：
+
+```bash
+cd pumpfun_grpc_sniper   # 或 pumpfun_shredstream_sniper
+cp .env.example .env
+```
+
+然后**本地编辑**（勿提交；狙击示例只需要 `.env`）：
 
 | 文件 | 内容 |
 |------|------|

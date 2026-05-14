@@ -72,6 +72,8 @@ fnzero-examples/
 ├── pumpswap_trade_with_safekey/ # PumpSwap (outer pool) trading example (encrypted keystore)
 ├── pumpfun_trade/               # PumpFun (bonding curve) trading example (direct private key)
 ├── pumpfun_trade_with_safekey/  # PumpFun (bonding curve) trading example (encrypted keystore)
+├── pumpfun_grpc_sniper/         # PumpFun gRPC sniper example (direct private key)
+├── pumpfun_shredstream_sniper/  # PumpFun ShredStream sniper example (direct private key)
 ├── sol-trade-sdk/              # Unified DEX trading SDK
 ├── sol-parser-sdk/             # Transaction parsing SDK (gRPC streaming)
 ├── sol-safekey/                # Encrypted key management library
@@ -90,6 +92,8 @@ fnzero-examples/
 | **PumpSwap Trading (Encrypted)** | Same as above with encrypted keystore | `./run.sh` | [pumpswap_trade_with_safekey](./pumpswap_trade_with_safekey/) |
 | **PumpFun Trading** | Buy→wait→sell on PumpFun bonding curve; token must not have graduated to PumpSwap | `./run.sh` | [pumpfun_trade](./pumpfun_trade/) |
 | **PumpFun Trading (Encrypted)** | Same as above; keystore / `KEYPAIR_BASE58` | `./run.sh` | [pumpfun_trade_with_safekey](./pumpfun_trade_with_safekey/) |
+| **PumpFun gRPC Sniper** | Monitor creator first buys through `sol-parser-sdk` gRPC, buy once, auto-sell after 3s | `./run.sh` | [pumpfun_grpc_sniper](./pumpfun_grpc_sniper/) |
+| **PumpFun ShredStream Sniper** | Monitor creator first buys through `sol-parser-sdk` ShredStream, buy once, auto-sell after 3s | `./run.sh` | [pumpfun_shredstream_sniper](./pumpfun_shredstream_sniper/) |
 
 ### Which example should I use?
 
@@ -99,8 +103,10 @@ fnzero-examples/
 | Token on **PumpSwap** outer AMM | `pumpswap_trade` or `pumpswap_trade_with_safekey` |
 | Private key via `PRIVATE_KEY` or `private_key` in YAML | `pumpfun_trade` / `pumpswap_trade` |
 | Encrypted **keystore** + password (or fallback `KEYPAIR_BASE58`) | `pumpfun_trade_with_safekey` / `pumpswap_trade_with_safekey` |
+| Snipe new PumpFun tokens from a gRPC trade stream | `pumpfun_grpc_sniper` |
+| Snipe new PumpFun tokens from ShredStream outer instructions | `pumpfun_shredstream_sniper` |
 
-### Shared behavior (all four trading examples)
+### Shared behavior (four loop trading examples)
 
 - ✅ **Flow**: Buy → wait ~30s → sell; **1 round by default** (change `ROUNDS` / `REST_SECS` in each crate’s `src/run.rs`)
 - ✅ **Multi-SWQoS**: Concurrent submission to several MEV channels
@@ -118,6 +124,8 @@ fnzero-examples/
 | PumpSwap (encrypted) | [README_CN.md](./pumpswap_trade_with_safekey/README_CN.md) | [README.md](./pumpswap_trade_with_safekey/README.md) |
 | PumpFun (private key) | [README_CN.md](./pumpfun_trade/README_CN.md) | [README.md](./pumpfun_trade/README.md) |
 | PumpFun (encrypted) | [README_CN.md](./pumpfun_trade_with_safekey/README_CN.md) | [README.md](./pumpfun_trade_with_safekey/README.md) |
+| PumpFun gRPC sniper | [README_CN.md](./pumpfun_grpc_sniper/README_CN.md) | [README.md](./pumpfun_grpc_sniper/README.md) |
+| PumpFun ShredStream sniper | [README_CN.md](./pumpfun_shredstream_sniper/README_CN.md) | [README.md](./pumpfun_shredstream_sniper/README.md) |
 
 ### Configuration
 
@@ -229,7 +237,14 @@ cp config/dev/trading.yaml.example config/dev/trading.yaml
 # For prod, also copy config/prod/*.example → config/prod/*.yaml
 ```
 
-Then **edit locally** (do not commit):
+`pumpfun_grpc_sniper` and `pumpfun_shredstream_sniper` only use `.env`, no YAML:
+
+```bash
+cd pumpfun_grpc_sniper   # or pumpfun_shredstream_sniper
+cp .env.example .env
+```
+
+Then **edit locally** (do not commit; sniper examples only need `.env`):
 
 | File | What to fill in |
 |------|-----------------|
