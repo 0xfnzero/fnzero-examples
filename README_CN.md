@@ -55,6 +55,17 @@
 
 ---
 
+## 这个仓库适合什么场景
+
+`fnzero-examples` 是基于 FnZero SDK 生态的 Solana 交易机器人实战示例集合，重点提供可运行的 Rust 示例，覆盖 PumpFun 内盘交易、PumpSwap 外盘交易、加密 keystore、Yellowstone gRPC 监听、ShredStream 监听、SWQoS 提交通道和 durable nonce 配置。
+
+| 方向 | 覆盖范围 |
+|------|----------|
+| 交易示例 | PumpFun 买卖循环、PumpSwap 买卖循环、加密 keystore 版本 |
+| 狙击示例 | 通过 Yellowstone gRPC 或 Jito ShredStream 监听 PumpFun 创建者首次买入 |
+| 使用的 SDK | `sol-trade-sdk`、`sol-parser-sdk`，以及可选的本地 `sol-safekey` 克隆 |
+| 目标用户 | Solana Bot 开发者、跟单系统开发者、DEX 集成开发者和测试 FnZero SDK 工作流的运维人员 |
+
 ## ✨ 特性
 
 - **交易示例**: PumpSwap 外盘与 PumpFun 内盘交易机器人示例，支持自动化买入/卖出策略
@@ -73,12 +84,10 @@ fnzero-examples/
 ├── pumpfun_trade/               # PumpFun 内盘交易示例（直接私钥）
 ├── pumpfun_trade_with_safekey/  # PumpFun 内盘交易示例（加密密钥库）
 ├── pumpfun_grpc_sniper/         # PumpFun gRPC 监听狙击示例（直接私钥）
-├── pumpfun_shredstream_sniper/  # PumpFun ShredStream 监听狙击示例（直接私钥）
-├── sol-trade-sdk/              # 统一 DEX 交易 SDK
-├── sol-parser-sdk/             # 交易解析 SDK（gRPC 流式处理）
-├── sol-safekey/                # 加密密钥管理库
-└── solana-streamer/            # Solana 交易流式处理工具
+└── pumpfun_shredstream_sniper/  # PumpFun ShredStream 监听狙击示例（直接私钥）
 ```
+
+`sol-safekey/`、`sol-trade-sdk/`、`sol-parser-sdk/` 和 `solana-streamer/` 是外部项目。如果为了本地开发把它们克隆到本仓库根目录，`.gitignore` 会忽略这些目录。
 
 ---
 
@@ -171,7 +180,7 @@ fnzero-examples/
 - Durable Nonce 管理
 - Gas 费策略优化
 
-**文档:** [sol-trade-sdk/README_CN.md](./sol-trade-sdk/README_CN.md)
+**仓库:** [0xfnzero/sol-trade-sdk](https://github.com/0xfnzero/sol-trade-sdk)
 
 ### sol-parser-sdk
 
@@ -184,7 +193,7 @@ fnzero-examples/
 - 交易事件提取
 - 账户填充器优化账户查询
 
-**文档:** [sol-parser-sdk/README_CN.md](./sol-parser-sdk/README_CN.md)
+**仓库:** [0xfnzero/sol-parser-sdk](https://github.com/0xfnzero/sol-parser-sdk)
 
 ### sol-safekey
 
@@ -197,7 +206,7 @@ fnzero-examples/
 - CLI 密钥管理工具
 - 与交易示例集成
 
-**文档:** [sol-safekey/README_CN.md](./sol-safekey/README_CN.md)
+**仓库:** [0xfnzero/sol-safekey](https://github.com/0xfnzero/sol-safekey)
 
 ### solana-streamer
 
@@ -209,7 +218,7 @@ Solana 交易流式处理和实时数据处理工具。
 - 事件处理管道
 - 性能优化的解析
 
-**文档:** [solana-streamer/README_CN.md](./solana-streamer/README_CN.md)
+**仓库:** [0xfnzero/solana-streamer](https://github.com/0xfnzero/solana-streamer)
 
 ---
 
@@ -256,11 +265,11 @@ cp .env.example .env
 
 ### 3. 使用加密钱包时：单独准备 sol-safekey
 
-本仓库的 `.gitignore` **不包含** [sol-safekey](https://github.com/0xfnzero/sol-safekey) 子模块目录。生成 `keystore.json` 前请先克隆该工具仓库：
+本仓库的 `.gitignore` 会忽略本地 [sol-safekey](https://github.com/0xfnzero/sol-safekey) 克隆。需要运行加密 keystore 示例或生成 `keystore.json` 时，请把它克隆到仓库根目录：
 
 ```bash
-cd /path/to/parent
-git clone https://github.com/0xfnzero/sol-safekey.git
+cd /path/to/fnzero-examples
+git clone https://github.com/0xfnzero/sol-safekey.git sol-safekey
 cd sol-safekey
 cargo run --release -- export <私钥或助记词> /path/to/fnzero-examples/pumpswap_trade_with_safekey/keystore.json
 ```
@@ -308,7 +317,9 @@ cp config/dev/trading.yaml.example config/dev/trading.yaml
 **方式 2：加密 keystore**（需已按上文单独克隆 [sol-safekey](https://github.com/0xfnzero/sol-safekey)）
 
 ```bash
-cd /path/to/sol-safekey
+cd /path/to/fnzero-examples
+git clone https://github.com/0xfnzero/sol-safekey.git sol-safekey  # 已克隆则跳过
+cd sol-safekey
 cargo run --release -- export <你的私钥或助记词> /path/to/fnzero-examples/pumpswap_trade_with_safekey/keystore.json
 
 cd /path/to/fnzero-examples/pumpswap_trade_with_safekey   # PumpFun 则用 pumpfun_trade_with_safekey

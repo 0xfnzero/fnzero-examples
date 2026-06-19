@@ -55,6 +55,17 @@
 
 ---
 
+## What This Repository Is For
+
+`fnzero-examples` is a hands-on example collection for building Solana trading bots with the FnZero SDK ecosystem. It focuses on runnable Rust examples for PumpFun bonding-curve trading, PumpSwap AMM trading, encrypted keystore flows, Yellowstone gRPC monitoring, ShredStream monitoring, SWQoS submit lanes, and durable nonce setup.
+
+| Area | Coverage |
+|------|----------|
+| Trading examples | PumpFun buy/sell loops, PumpSwap buy/sell loops, encrypted-keystore variants |
+| Sniper examples | PumpFun creator-first-buy monitoring through Yellowstone gRPC or Jito ShredStream |
+| SDKs used | `sol-trade-sdk`, `sol-parser-sdk`, optional local `sol-safekey` clone |
+| Target users | Solana bot developers, copy-trading builders, DEX integrators, and operators testing FnZero SDK workflows |
+
 ## ✨ Features
 
 - **Trading Examples**: Ready-to-use bots for PumpSwap (outer pool) and PumpFun (bonding curve) with automated buy/sell
@@ -73,12 +84,10 @@ fnzero-examples/
 ├── pumpfun_trade/               # PumpFun (bonding curve) trading example (direct private key)
 ├── pumpfun_trade_with_safekey/  # PumpFun (bonding curve) trading example (encrypted keystore)
 ├── pumpfun_grpc_sniper/         # PumpFun gRPC sniper example (direct private key)
-├── pumpfun_shredstream_sniper/  # PumpFun ShredStream sniper example (direct private key)
-├── sol-trade-sdk/              # Unified DEX trading SDK
-├── sol-parser-sdk/             # Transaction parsing SDK (gRPC streaming)
-├── sol-safekey/                # Encrypted key management library
-└── solana-streamer/            # Solana transaction streaming utilities
+└── pumpfun_shredstream_sniper/  # PumpFun ShredStream sniper example (direct private key)
 ```
+
+`sol-safekey/`, `sol-trade-sdk/`, `sol-parser-sdk/`, and `solana-streamer/` are external projects. If you clone any of them into this repository for local development, they are ignored by `.gitignore`.
 
 ---
 
@@ -171,7 +180,7 @@ Comprehensive Rust SDK for Solana DEX trading with unified interface for multipl
 - Durable Nonce management
 - Gas fee strategy optimization
 
-**Documentation:** [sol-trade-sdk/README.md](./sol-trade-sdk/README.md)
+**Repository:** [0xfnzero/sol-trade-sdk](https://github.com/0xfnzero/sol-trade-sdk)
 
 ### sol-parser-sdk
 
@@ -184,7 +193,7 @@ Transaction parsing SDK with gRPC streaming support for real-time event processi
 - Trade event extraction
 - Account filler for optimized account lookups
 
-**Documentation:** [sol-parser-sdk/README.md](./sol-parser-sdk/README.md)
+**Repository:** [0xfnzero/sol-parser-sdk](https://github.com/0xfnzero/sol-parser-sdk)
 
 ### sol-safekey
 
@@ -197,7 +206,7 @@ Encrypted key management library for secure Solana keypair storage.
 - CLI tools for key management
 - Integration with trading examples
 
-**Documentation:** [sol-safekey/README.md](./sol-safekey/README.md)
+**Repository:** [0xfnzero/sol-safekey](https://github.com/0xfnzero/sol-safekey)
 
 ### solana-streamer
 
@@ -209,7 +218,7 @@ Utilities for Solana transaction streaming and real-time data processing.
 - Event processing pipeline
 - Performance-optimized parsing
 
-**Documentation:** [solana-streamer/README.md](./solana-streamer/README.md)
+**Repository:** [0xfnzero/solana-streamer](https://github.com/0xfnzero/solana-streamer)
 
 ---
 
@@ -256,11 +265,11 @@ Then **edit locally** (do not commit; sniper examples only need `.env`):
 
 ### 3. Encrypted keystore: install sol-safekey separately
 
-This repo’s `.gitignore` excludes the [sol-safekey](https://github.com/0xfnzero/sol-safekey) tree. Clone that project to generate `keystore.json`:
+This repo’s `.gitignore` ignores a local [sol-safekey](https://github.com/0xfnzero/sol-safekey) checkout. Clone it into the repository root when you need the encrypted-keystore examples or want to generate `keystore.json`:
 
 ```bash
-cd /path/to/parent
-git clone https://github.com/0xfnzero/sol-safekey.git
+cd /path/to/fnzero-examples
+git clone https://github.com/0xfnzero/sol-safekey.git sol-safekey
 cd sol-safekey
 cargo run --release -- export <private_key_or_mnemonic> /path/to/fnzero-examples/pumpswap_trade_with_safekey/keystore.json
 ```
@@ -308,7 +317,9 @@ cp config/dev/trading.yaml.example config/dev/trading.yaml
 **Option 2: Encrypted keystore** (requires a separate [sol-safekey](https://github.com/0xfnzero/sol-safekey) clone as described above)
 
 ```bash
-cd /path/to/sol-safekey
+cd /path/to/fnzero-examples
+git clone https://github.com/0xfnzero/sol-safekey.git sol-safekey  # skip if already cloned
+cd sol-safekey
 cargo run --release -- export <private_key_or_mnemonic> /path/to/fnzero-examples/pumpswap_trade_with_safekey/keystore.json
 
 cd /path/to/fnzero-examples/pumpswap_trade_with_safekey   # or pumpfun_trade_with_safekey
