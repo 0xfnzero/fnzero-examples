@@ -54,7 +54,7 @@ fn default_buy_slippage_bps() -> u64 {
     500
 }
 fn default_sell_slippage_bps() -> u64 {
-    9980
+    500
 }
 
 #[derive(serde::Deserialize)]

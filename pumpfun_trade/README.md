@@ -54,9 +54,10 @@ If you pass a graduated mint here, the program fails while resolving the bonding
 ## Features
 
 1. **Protocol**: `DexType::PumpFun` with `PumpFunParams::from_mint_by_rpc`; params are **fetched again before sell** so `creator_vault` and curve state stay fresh.
-2. **Flow**: Buy → wait ~30s → sell the wallet’s **full balance** of that mint; **1 round** by default (edit `ROUNDS`, `REST_SECS` in `src/run.rs`).
+2. **Flow**: Read balance → buy and confirm → wait ~30s → sell only this round's balance increase; **1 round** by default (edit `ROUNDS`, `REST_SECS` in `src/run.rs`).
 3. **Multi-SWQoS**, **durable nonce** (required when 2+ SWQoS are enabled), **trading.yaml** for slippage/Gas—same ideas as `pumpswap_trade`.
 4. **Nonce placeholders**: empty strings in `nonce_config` lists are ignored so `NONCE_ACCOUNT` can still apply.
+5. **Explicit trade intent**: buy uses `SimpleBuyParams` with `BuyAmount::WithMaxInput`; sell uses `SellAmount::ExactInput`. Buy and sell slippage default to 500 bps (5%). Use `ExactInput` only when the quote spend must be exact and minimum-output failures are acceptable.
 
 ---
 

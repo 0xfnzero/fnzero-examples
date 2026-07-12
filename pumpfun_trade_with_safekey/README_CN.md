@@ -7,6 +7,8 @@
     <strong>与 <a href="../pumpfun_trade/README_CN.md">pumpfun_trade</a> 交易逻辑相同，钱包改为 <code>sol-safekey</code> 加密文件或备用 <code>KEYPAIR_BASE58</code>。</strong>
 </p>
 
+> 本 crate 使用 crates.io 的 `sol-safekey 0.1.8` 和 `sol-trade-sdk 4.0.22`，不再要求本地 `../sol-safekey` 目录。
+
 <p align="center">
     <a href="README_CN.md">中文</a> |
     <a href="README.md">English</a> |
@@ -27,12 +29,14 @@
 
 ## 生成 keystore
 
-在仓库中执行（路径按实际放置调整）：
+安装 CLI 并生成 keystore：
 
 ```bash
-cd sol-safekey
-cargo run --release -- export <私钥或助记词> ../pumpfun_trade_with_safekey/keystore.json
+cargo install sol-safekey --version 0.1.8 --features full --locked
+sol-safekey start
 ```
+
+依次选择“创建加密私钥”→“导入现有私钥并加密”→“保存为 Keystore 文件”，并填写本 crate 的 `keystore.json` 路径。
 
 然后在 `pumpfun_trade_with_safekey/config/dev/solana.yaml` 中写入 `keystore_path: "./keystore.json"`。
 
@@ -40,7 +44,7 @@ cargo run --release -- export <私钥或助记词> ../pumpfun_trade_with_safekey
 
 ## 运行前准备
 
-1. 按仓库根目录 [README_CN.md](../README_CN.md) 单独克隆 **sol-safekey** 并生成 `keystore.json`（本仓库不包含该目录）。
+1. 按上文安装可选的 `sol-safekey` CLI 并生成 `keystore.json`；库依赖由 Cargo 自动下载。
 2. 在本目录执行：
 
 ```bash
@@ -66,9 +70,11 @@ cargo build --release
 
 ## 功能摘要
 
-- 默认 **1 轮**：买 → 等约 30 秒 → 卖光该 mint 余额（见 `src/run.rs` 中 `ROUNDS`）。
+- 默认 **1 轮**：读取买前余额 → 买入并确认 → 等约 30 秒 → 仅卖出本轮余额增量（见 `src/run.rs` 中 `ROUNDS`）。
 - **≥2 个 SWQoS** 需配置 durable nonce；YAML 中空字符串占位不生效时可依赖 **`NONCE_ACCOUNT`**。
 - 卖出前重新 `from_mint_by_rpc`，与 `pumpfun_trade` 一致。
+- 买入使用 `SimpleBuyParams + BuyAmount::WithMaxInput`，卖出使用 `SellAmount::ExactInput`；买卖滑点默认均为 500 bps（5%）。
+- `SKIP_TRADING` 会保留钱包解锁和 RPC 探测，但阻止买卖交易提交。
 
 ---
 

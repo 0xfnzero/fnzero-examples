@@ -63,7 +63,7 @@
 |------|----------|
 | Trading examples | PumpFun buy/sell loops, PumpSwap buy/sell loops, encrypted-keystore variants |
 | Sniper examples | PumpFun creator-first-buy monitoring through Yellowstone gRPC or Jito ShredStream |
-| SDKs used | `sol-trade-sdk`, `sol-parser-sdk`, optional local `sol-safekey` clone |
+| SDKs used | `sol-trade-sdk`, `sol-parser-sdk`, and `sol-safekey` |
 | Target users | Solana bot developers, copy-trading builders, DEX integrators, and operators testing FnZero SDK workflows |
 
 ## ✨ Features
@@ -73,7 +73,7 @@
 - **Comprehensive SDKs**: Modular SDKs for trading, parsing, key management, and streaming
 - **Real-time Streaming**: gRPC-based transaction streaming and parsing with low-latency event processing
 - **Secure Key Management**: Encrypted keystore support with password protection
-- **Production Ready**: Optimized builds with cross-platform support (Linux, macOS)
+- **Production Oriented**: Optimized builds and core workflows; examples still require application-specific risk controls, state management, and monitoring
 
 ## 📁 Project Structure
 
@@ -87,7 +87,7 @@ fnzero-examples/
 └── pumpfun_shredstream_sniper/  # PumpFun ShredStream sniper example (direct private key)
 ```
 
-`sol-safekey/`, `sol-trade-sdk/`, `sol-parser-sdk/`, and `solana-streamer/` are external projects. If you clone any of them into this repository for local development, they are ignored by `.gitignore`.
+`sol-safekey` is resolved from crates.io by the encrypted-keystore examples; no sibling checkout is required. Local SDK checkouts remain ignored by `.gitignore` for optional development work.
 
 ---
 
@@ -104,6 +104,8 @@ fnzero-examples/
 | **PumpFun gRPC Sniper** | Monitor creator first buys through `sol-parser-sdk` gRPC, buy once, auto-sell after 3s | `./run.sh` | [pumpfun_grpc_sniper](./pumpfun_grpc_sniper/) |
 | **PumpFun ShredStream Sniper** | Monitor creator first buys through `sol-parser-sdk` ShredStream, buy once, auto-sell after 3s | `./run.sh` | [pumpfun_shredstream_sniper](./pumpfun_shredstream_sniper/) |
 
+> **Safekey compatibility:** both `*_with_safekey` crates use `sol-safekey 0.1.8`, `sol-trade-sdk 4.0.22`, and the same high-level `Simple*Params` trade API as the direct-key examples. Cargo downloads the library automatically.
+
 ### Which example should I use?
 
 | Scenario | Directory |
@@ -114,6 +116,8 @@ fnzero-examples/
 | Encrypted **keystore** + password (or fallback `KEYPAIR_BASE58`) | `pumpfun_trade_with_safekey` / `pumpswap_trade_with_safekey` |
 | Snipe new PumpFun tokens from a gRPC trade stream | `pumpfun_grpc_sniper` |
 | Snipe new PumpFun tokens from ShredStream outer instructions | `pumpfun_shredstream_sniper` |
+
+See the **[low-latency bot development guide](./LOW_LATENCY_BOT_GUIDE.md)** for architecture, trade intents, state freshness, SWQoS, and bounded requoting.
 
 ### Shared behavior (four loop trading examples)
 
@@ -263,16 +267,16 @@ Then **edit locally** (do not commit; sniper examples only need `.env`):
 
 `APP_ENV=dev` uses `config/dev/`, `APP_ENV=prod` uses `config/prod/`.
 
-### 3. Encrypted keystore: install sol-safekey separately
+### 3. Encrypted keystore: install the optional sol-safekey CLI
 
-This repo’s `.gitignore` ignores a local [sol-safekey](https://github.com/0xfnzero/sol-safekey) checkout. Clone it into the repository root when you need the encrypted-keystore examples or want to generate `keystore.json`:
+The encrypted examples obtain the `sol-safekey` library from crates.io automatically. Install the CLI only when you need to create or manage `keystore.json`:
 
 ```bash
-cd /path/to/fnzero-examples
-git clone https://github.com/0xfnzero/sol-safekey.git sol-safekey
-cd sol-safekey
-cargo run --release -- export <private_key_or_mnemonic> /path/to/fnzero-examples/pumpswap_trade_with_safekey/keystore.json
+cargo install sol-safekey --version 0.1.8 --features full --locked
+sol-safekey start
 ```
+
+In the menu, choose **Create encrypted key**, then **Import existing private key**, and save it to `/path/to/fnzero-examples/pumpswap_trade_with_safekey/keystore.json`.
 
 Then set `keystore_path` in the example’s `solana.yaml` (e.g. `./keystore.json`).
 
@@ -314,13 +318,11 @@ cp config/dev/trading.yaml.example config/dev/trading.yaml
 # or: cargo run --release -- <TOKEN_MINT_ADDRESS>
 ```
 
-**Option 2: Encrypted keystore** (requires a separate [sol-safekey](https://github.com/0xfnzero/sol-safekey) clone as described above)
+**Option 2: Encrypted keystore** (the example library dependency is downloaded automatically; install the CLI to generate a keystore)
 
 ```bash
-cd /path/to/fnzero-examples
-git clone https://github.com/0xfnzero/sol-safekey.git sol-safekey  # skip if already cloned
-cd sol-safekey
-cargo run --release -- export <private_key_or_mnemonic> /path/to/fnzero-examples/pumpswap_trade_with_safekey/keystore.json
+cargo install sol-safekey --version 0.1.8 --features full --locked
+sol-safekey start
 
 cd /path/to/fnzero-examples/pumpswap_trade_with_safekey   # or pumpfun_trade_with_safekey
 
@@ -331,6 +333,8 @@ cp config/dev/trading.yaml.example config/dev/trading.yaml
 
 ./run.sh <TOKEN_MINT_ADDRESS>
 ```
+
+When running `sol-safekey start`, choose **Create encrypted key** → **Import existing private key** → **Save as Keystore file**, then enter the target example's `keystore.json` path.
 
 ### Configuration Details
 
@@ -391,7 +395,7 @@ cargo build --release
 
 MIT License
 
-See [LICENSE](./LICENSE) for details.
+The repository currently declares MIT licensing; consult the upstream repository metadata for the authoritative license notice.
 
 ---
 

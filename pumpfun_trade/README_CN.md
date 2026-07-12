@@ -55,9 +55,10 @@
 ## 功能特性
 
 1. **协议**：`DexType::PumpFun`，链上参数通过 `PumpFunParams::from_mint_by_rpc` 获取；**卖出前再次拉取**，避免 `creator_vault` 等字段过期。
-2. **流程**：买入 → 等待约 30 秒 → 按**钱包该 mint 的全部余额**卖出；默认 **1 轮**（修改 `src/run.rs` 中 `ROUNDS`、`REST_SECS`）。
+2. **流程**：读取买前余额 → 买入并确认 → 等待约 30 秒 → 仅卖出本轮余额增量；默认 **1 轮**（修改 `src/run.rs` 中 `ROUNDS`、`REST_SECS`）。
 3. **多 SWQoS**、**Durable Nonce**（≥2 个 SWQoS 时必填有效 nonce）、**trading.yaml** 滑点与 Gas 配置——与 `pumpswap_trade` 一致。
 4. **Nonce 占位**：`solana.yaml` 里 `buy_nonce_accounts: [""]` 等空串会被忽略，可仅用环境变量 `NONCE_ACCOUNT`。
+5. **明确交易意图**：买入使用 `SimpleBuyParams + BuyAmount::WithMaxInput`，卖出使用 `SellAmount::ExactInput`；买卖滑点默认均为 500 bps（5%）。只有业务必须固定花费 quote、且能接受最小输出失败时才改用 `ExactInput`。
 
 ---
 

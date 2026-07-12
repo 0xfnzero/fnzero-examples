@@ -1,7 +1,7 @@
 //! PumpFun ShredStream sniper example.
 //!
 //! Monitors PumpFun outer instructions through sol-parser-sdk ShredStream, buys once on
-//! the selected event, waits HOLD_SECONDS, then sells the full token balance.
+//! the selected event, waits HOLD_SECONDS, then sells only the balance added by this run.
 
 use std::{
     collections::HashMap,
@@ -18,20 +18,94 @@ use sol_parser_sdk::{
 };
 use sol_trade_sdk::{
     common::{
-        fast_fn::get_associated_token_address_with_program_id_fast_use_seed, GasFeeStrategy,
-        TradeConfig,
+        clock::now_micros, fast_fn::get_associated_token_address_with_program_id_fast_use_seed,
+        GasFeeStrategy, SolanaRpcClient, TradeConfig,
     },
     swqos::SwqosConfig,
     trading::{
         core::params::{DexParamEnum, PumpFunParams},
         factory::DexType,
     },
-    SolanaTrade, TradeTokenType,
+    AccountPolicy, BuyAmount, SellAmount, SimpleBuyParams, SimpleSellParams, SolanaTrade,
+    TradeTokenType,
 };
 use solana_commitment_config::CommitmentConfig;
 use solana_sdk::{
-    native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, signature::Keypair, signer::Signer,
+    hash::Hash, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, signature::Keypair, signer::Signer,
 };
+use tokio::sync::watch;
+
+const BLOCKHASH_REFRESH_INTERVAL: Duration = Duration::from_millis(400);
+const MAX_BLOCKHASH_AGE: Duration = Duration::from_secs(20);
+
+#[derive(Clone, Copy)]
+enum BuyMode {
+    WithMaxInput,
+    ExactInput,
+}
+
+impl BuyMode {
+    fn amount(self, quote_amount: u64) -> BuyAmount {
+        match self {
+            Self::WithMaxInput => BuyAmount::WithMaxInput { quote_amount },
+            Self::ExactInput => BuyAmount::ExactInput(quote_amount),
+        }
+    }
+}
+
+#[derive(Clone)]
+struct CachedBlockhash {
+    hash: Hash,
+    fetched_at: Instant,
+}
+
+#[derive(Clone)]
+struct BlockhashCache {
+    receiver: watch::Receiver<CachedBlockhash>,
+}
+
+impl BlockhashCache {
+    async fn start(rpc: Arc<SolanaRpcClient>) -> Result<Self> {
+        let initial = CachedBlockhash {
+            hash: rpc.get_latest_blockhash().await?,
+            fetched_at: Instant::now(),
+        };
+        let (sender, receiver) = watch::channel(initial);
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(BLOCKHASH_REFRESH_INTERVAL);
+            interval.tick().await;
+            loop {
+                interval.tick().await;
+                match rpc.get_latest_blockhash().await {
+                    Ok(hash) => {
+                        if sender
+                            .send(CachedBlockhash {
+                                hash,
+                                fetched_at: Instant::now(),
+                            })
+                            .is_err()
+                        {
+                            break;
+                        }
+                    }
+                    Err(err) => eprintln!("warning: blockhash refresh failed: {err}"),
+                }
+            }
+        });
+        Ok(Self { receiver })
+    }
+
+    fn latest(&self) -> Result<Hash> {
+        let cached = self.receiver.borrow().clone();
+        if cached.fetched_at.elapsed() > MAX_BLOCKHASH_AGE {
+            anyhow::bail!(
+                "cached blockhash is older than {} seconds",
+                MAX_BLOCKHASH_AGE.as_secs()
+            );
+        }
+        Ok(cached.hash)
+    }
+}
 
 #[derive(Clone)]
 struct Settings {
@@ -44,7 +118,11 @@ struct Settings {
     buy_slippage_bps: u64,
     sell_slippage_bps: u64,
     hold_seconds: u64,
+    max_event_age_ms: u64,
     wait_tx_confirmed: bool,
+    wait_for_all_submits: bool,
+    assume_prepared_atas: bool,
+    buy_mode: BuyMode,
 }
 
 #[derive(Clone)]
@@ -63,6 +141,8 @@ async fn main() -> Result<()> {
     dotenvy::dotenv().ok();
 
     let settings = Settings::from_env()?;
+    let trade_client = Arc::new(create_trade_client(&settings).await?);
+    let blockhash_cache = BlockhashCache::start(trade_client.infrastructure.rpc.clone()).await?;
     println!("PumpFun ShredStream sniper started");
     println!("  wallet: {}", settings.payer.pubkey());
     println!("  rpc: {}", settings.rpc_url);
@@ -78,13 +158,13 @@ async fn main() -> Result<()> {
     }
     println!("  require_created_buy: {}", settings.require_created_buy);
 
-    let client = ShredStreamClient::new_with_config(
+    let stream_client = ShredStreamClient::new_with_config(
         settings.shredstream_endpoint.clone(),
         ShredStreamConfig::low_latency(),
     )
     .await
     .map_err(|err| anyhow::anyhow!("failed to create ShredStream client: {}", err))?;
-    let queue = client
+    let queue = stream_client
         .subscribe()
         .await
         .map_err(|err| anyhow::anyhow!("failed to subscribe ShredStream events: {}", err))?;
@@ -110,13 +190,24 @@ async fn main() -> Result<()> {
                     if let Some(ctx) = created_mints.get(&e.mint) {
                         enrich_trade_from_create(&mut e, ctx);
                     }
-                    if select_trade_event(&e, settings.target_mint, settings.require_created_buy) {
+                    if select_trade_event(
+                        &e,
+                        settings.target_mint,
+                        settings.require_created_buy,
+                        settings.max_event_age_ms,
+                    ) {
                         println!(
                             "matched event: mint={}, sig={}, slot={}, ix={}",
                             e.mint, e.metadata.signature, e.metadata.slot, e.ix_name
                         );
-                        execute_buy_hold_sell(settings.clone(), e).await?;
-                        client.stop().await;
+                        execute_buy_hold_sell(
+                            settings.clone(),
+                            e,
+                            trade_client.clone(),
+                            blockhash_cache.clone(),
+                        )
+                        .await?;
+                        stream_client.stop().await;
                         break;
                     }
                 }
@@ -150,7 +241,7 @@ impl Settings {
             .context("TARGET_MINT is not a valid pubkey")?;
         let buy_sol = env_f64("BUY_SOL_AMOUNT", 0.01)?;
 
-        Ok(Self {
+        let settings = Self {
             payer,
             rpc_url,
             shredstream_endpoint,
@@ -158,10 +249,26 @@ impl Settings {
             require_created_buy: env_bool("REQUIRE_CREATED_BUY", true),
             buy_lamports: (buy_sol * LAMPORTS_PER_SOL as f64).round() as u64,
             buy_slippage_bps: env_u64("BUY_SLIPPAGE_BPS", 300)?,
-            sell_slippage_bps: env_u64("SELL_SLIPPAGE_BPS", 9980)?,
+            sell_slippage_bps: env_u64("SELL_SLIPPAGE_BPS", 500)?,
             hold_seconds: env_u64("HOLD_SECONDS", 3)?,
+            max_event_age_ms: env_u64("MAX_EVENT_AGE_MS", 1_000)?,
             wait_tx_confirmed: env_bool("WAIT_TX_CONFIRMED", true),
-        })
+            wait_for_all_submits: env_bool("WAIT_FOR_ALL_SUBMITS", false),
+            assume_prepared_atas: env_bool("ASSUME_PREPARED_ATAS", false),
+            buy_mode: match env_string("BUY_MODE")
+                .unwrap_or_else(|| "with_max_input".to_string())
+                .to_ascii_lowercase()
+                .as_str()
+            {
+                "with_max_input" => BuyMode::WithMaxInput,
+                "exact_input" => BuyMode::ExactInput,
+                value => {
+                    anyhow::bail!("BUY_MODE must be with_max_input or exact_input, got {value}")
+                }
+            },
+        };
+        validate_settings(&settings)?;
+        Ok(settings)
     }
 }
 
@@ -234,6 +341,7 @@ fn select_trade_event(
     event: &PumpFunTradeEvent,
     target_mint: Option<Pubkey>,
     require_created_buy: bool,
+    max_event_age_ms: u64,
 ) -> bool {
     if !event.is_buy {
         return false;
@@ -246,39 +354,60 @@ fn select_trade_event(
             return false;
         }
     }
+    if !is_event_fresh(event.metadata.grpc_recv_us, now_micros(), max_event_age_ms) {
+        eprintln!(
+            "ignoring stale event for mint {} (MAX_EVENT_AGE_MS={})",
+            event.mint, max_event_age_ms
+        );
+        return false;
+    }
     true
 }
 
-async fn execute_buy_hold_sell(settings: Settings, event: PumpFunTradeEvent) -> Result<()> {
-    let client = create_trade_client(&settings).await?;
+fn is_event_fresh(recv_us: i64, now_us: i64, max_age_ms: u64) -> bool {
+    recv_us > 0
+        && now_us >= recv_us
+        && now_us.saturating_sub(recv_us) <= (max_age_ms as i64).saturating_mul(1_000)
+}
+
+async fn execute_buy_hold_sell(
+    settings: Settings,
+    event: PumpFunTradeEvent,
+    client: Arc<SolanaTrade>,
+    blockhash_cache: BlockhashCache,
+) -> Result<()> {
     let gas_fee_strategy = default_gas_fee_strategy();
 
     validate_trade_event_for_buy(&event)?;
 
-    let recent_blockhash = client.infrastructure.rpc.get_latest_blockhash().await?;
-    let buy_params = sol_trade_sdk::TradeBuyParams {
-        dex_type: DexType::PumpFun,
-        input_token_type: TradeTokenType::SOL,
-        mint: event.mint,
-        input_token_amount: settings.buy_lamports,
-        slippage_basis_points: Some(settings.buy_slippage_bps),
-        recent_blockhash: Some(recent_blockhash),
-        extension_params: DexParamEnum::PumpFun(build_buy_params(&client, &event).await?),
-        address_lookup_table_account: None,
-        wait_tx_confirmed: settings.wait_tx_confirmed,
-        create_input_token_ata: false,
-        close_input_token_ata: false,
-        create_mint_ata: true,
-        durable_nonce: None,
-        fixed_output_token_amount: None,
-        gas_fee_strategy: gas_fee_strategy.clone(),
-        simulate: false,
-        use_exact_sol_amount: Some(true),
-        grpc_recv_us: Some(event.metadata.grpc_recv_us),
+    let balance_before = client
+        .get_payer_token_balance_with_program(&event.mint, &event.token_program)
+        .await
+        .context("failed to read token balance before buy")?;
+
+    let recent_blockhash = blockhash_cache.latest()?;
+    let account_policy = if settings.assume_prepared_atas {
+        AccountPolicy::HotPathMinimal
+    } else {
+        AccountPolicy::Auto
     };
+    let buy_params = SimpleBuyParams::new(
+        DexType::PumpFun,
+        TradeTokenType::SOL,
+        event.mint,
+        settings.buy_mode.amount(settings.buy_lamports),
+        DexParamEnum::PumpFun(build_buy_params(&client, &event).await?),
+        recent_blockhash,
+        gas_fee_strategy.clone(),
+    )
+    .slippage_basis_points(settings.buy_slippage_bps)
+    .account_policy(account_policy)
+    .wait_tx_confirmed(settings.wait_tx_confirmed)
+    .wait_for_all_submits(settings.wait_for_all_submits)
+    .grpc_recv_us(event.metadata.grpc_recv_us);
 
     println!("buying {}...", event.mint);
-    let (ok, sigs, err, _) = client.buy(buy_params).await?;
+    let (ok, sigs, err, _) = client.buy_simple(buy_params).await?;
     if !ok {
         let message = err
             .map(|e| e.to_string())
@@ -290,38 +419,38 @@ async fn execute_buy_hold_sell(settings: Settings, event: PumpFunTradeEvent) -> 
     println!("holding {} seconds before sell...", settings.hold_seconds);
     tokio::time::sleep(Duration::from_secs(settings.hold_seconds)).await;
 
-    let amount_token = client
+    let balance_after = client
         .get_payer_token_balance_with_program(&event.mint, &event.token_program)
         .await
         .context("failed to read token balance before sell")?;
-    if amount_token == 0 {
-        anyhow::bail!("token balance is zero, nothing to sell");
+    let position_amount = balance_after.checked_sub(balance_before).ok_or_else(|| {
+        anyhow::anyhow!(
+            "token balance decreased from {} to {}; refusing to sell existing holdings",
+            balance_before,
+            balance_after
+        )
+    })?;
+    if position_amount == 0 {
+        anyhow::bail!("confirmed buy did not increase the token balance; refusing to sell");
     }
 
-    let sell_recent_blockhash = client.infrastructure.rpc.get_latest_blockhash().await?;
-    let sell_params = sol_trade_sdk::TradeSellParams {
-        dex_type: DexType::PumpFun,
-        output_token_type: TradeTokenType::SOL,
-        mint: event.mint,
-        input_token_amount: amount_token,
-        slippage_basis_points: Some(settings.sell_slippage_bps),
-        recent_blockhash: Some(sell_recent_blockhash),
-        with_tip: true,
-        extension_params: DexParamEnum::PumpFun(build_fresh_sell_params(&client, &event).await?),
-        address_lookup_table_account: None,
-        wait_tx_confirmed: settings.wait_tx_confirmed,
-        create_output_token_ata: true,
-        close_output_token_ata: false,
-        close_mint_token_ata: false,
-        durable_nonce: None,
-        fixed_output_token_amount: None,
+    let sell_recent_blockhash = blockhash_cache.latest()?;
+    let sell_params = SimpleSellParams::new(
+        DexType::PumpFun,
+        TradeTokenType::SOL,
+        event.mint,
+        SellAmount::ExactInput(position_amount),
+        DexParamEnum::PumpFun(build_fresh_sell_params(&client, &event).await?),
+        sell_recent_blockhash,
         gas_fee_strategy,
-        simulate: false,
-        grpc_recv_us: None,
-    };
+    )
+    .slippage_basis_points(settings.sell_slippage_bps)
+    .account_policy(AccountPolicy::Auto)
+    .wait_tx_confirmed(settings.wait_tx_confirmed)
+    .wait_for_all_submits(settings.wait_for_all_submits);
 
-    println!("selling {} tokens...", amount_token);
-    let (ok, sigs, err, _) = client.sell(sell_params).await?;
+    println!("selling this run's {} tokens...", position_amount);
+    let (ok, sigs, err, _) = client.sell_simple(sell_params).await?;
     if !ok {
         let message = err
             .map(|e| e.to_string())
@@ -353,7 +482,7 @@ async fn build_buy_params(
 ) -> Result<PumpFunParams> {
     if event.is_created_buy && event.creator != Pubkey::default() {
         let max_sol_cost = event.sol_amount.saturating_add(event.sol_amount / 10);
-        return Ok(PumpFunParams::from_dev_trade(
+        return Ok(PumpFunParams::from_dev_trade_with_quote_mint(
             event.mint,
             event.token_amount,
             max_sol_cost,
@@ -366,6 +495,7 @@ async fn build_buy_params(
             event.token_program,
             event.is_cashback_coin,
             Some(event.mayhem_mode),
+            event.quote_mint,
         ));
     }
 
@@ -395,6 +525,25 @@ fn validate_trade_event_for_buy(event: &PumpFunTradeEvent) -> Result<()> {
     }
     if event.is_created_buy && event.creator == Pubkey::default() {
         anyhow::bail!("ShredStream created-buy event is missing creator context");
+    }
+    Ok(())
+}
+
+fn validate_settings(settings: &Settings) -> Result<()> {
+    if settings.buy_lamports == 0 {
+        anyhow::bail!("BUY_SOL_AMOUNT must produce at least one lamport");
+    }
+    if settings.buy_slippage_bps >= 10_000 || settings.sell_slippage_bps >= 10_000 {
+        anyhow::bail!("BUY_SLIPPAGE_BPS and SELL_SLIPPAGE_BPS must be below 10000");
+    }
+    if settings.max_event_age_ms == 0 || settings.max_event_age_ms > i64::MAX as u64 / 1_000 {
+        anyhow::bail!(
+            "MAX_EVENT_AGE_MS must be between 1 and {}",
+            i64::MAX / 1_000
+        );
+    }
+    if !settings.wait_tx_confirmed {
+        anyhow::bail!("WAIT_TX_CONFIRMED must be true when automatic selling is enabled");
     }
     Ok(())
 }
@@ -456,4 +605,17 @@ fn env_f64(key: &str, default: f64) -> Result<f64> {
                 .with_context(|| format!("{} must be f64", key))
         })
         .unwrap_or(Ok(default))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_event_fresh;
+
+    #[test]
+    fn event_freshness_rejects_missing_future_and_stale_timestamps() {
+        assert!(!is_event_fresh(0, 1_000_000, 100));
+        assert!(!is_event_fresh(1_000_001, 1_000_000, 100));
+        assert!(!is_event_fresh(899_999, 1_000_000, 100));
+        assert!(is_event_fresh(900_000, 1_000_000, 100));
+    }
 }

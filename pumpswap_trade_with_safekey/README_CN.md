@@ -7,6 +7,8 @@
     <strong>Rust 示例：PumpSwap 外盘自动买入 → 等待约 30 秒 → 卖出（默认 1 轮，见 <code>src/run.rs</code>）。加密 keystore + 多 SWQoS。</strong>
 </p>
 
+> 本 crate 使用 crates.io 的 `sol-safekey 0.1.8` 和 `sol-trade-sdk 4.0.22`，不再要求本地 `../sol-safekey` 目录。
+
 <p align="center">
     <a href="https://github.com/0xfnzero/fnzero-examples">
         <img src="https://img.shields.io/github/stars/0xfnzero/fnzero-examples?style=social" alt="GitHub stars">
@@ -57,6 +59,7 @@
 4. **灵活配置**：支持 YAML 配置文件和环境变量
 5. **环境变量优先级**：环境变量可覆盖配置文件中的敏感信息
 6. **跨平台构建**：支持 Linux 部署的构建脚本
+7. **明确交易意图**：买入使用 `SimpleBuyParams + BuyAmount::WithMaxInput`，卖出使用 `SellAmount::ExactInput`；买卖滑点默认均为 500 bps（5%）。
 
 ---
 
@@ -82,7 +85,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 ### 运行前必做（隐私）
 
-1. 单独克隆 [sol-safekey](https://github.com/0xfnzero/sol-safekey) 生成 `keystore.json`（本仓库不含该目录），见根目录 [README_CN.md](../README_CN.md)。
+1. 安装可选的 `sol-safekey` CLI 生成 `keystore.json`；库依赖由 Cargo 自动下载。
 2. 在本目录：
 
 ```bash
@@ -135,23 +138,17 @@ NONCE_ACCOUNT=
 
 ##### 步骤 1：安装 sol-safekey
 
-**从源码编译安装（推荐）：**
+**从 crates.io 安装（推荐）：**
 
 ```bash
-# 1. 克隆或进入 sol-safekey 项目目录
-cd /path/to/sol-safekey
-
-# 2. 使用 full feature 编译并安装
-cargo install --path . --features="full"
-
-# 3. 验证安装
+cargo install sol-safekey --version 0.1.8 --features full --locked
 sol-safekey --version
 ```
 
-**从 crates.io 安装：**
+**安装本地开发源码：**
 
 ```bash
-cargo install sol-safekey --features="full"
+cargo install --path /path/to/sol-safekey --features full --locked
 ```
 
 ##### 步骤 2：启动交互式菜单

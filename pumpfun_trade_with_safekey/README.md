@@ -7,6 +7,8 @@
     <strong>Same trading flow as <a href="../pumpfun_trade/README.md">pumpfun_trade</a>, but the wallet uses a <code>sol-safekey</code> file or fallback <code>KEYPAIR_BASE58</code>.</strong>
 </p>
 
+> This crate uses `sol-safekey 0.1.8` from crates.io and `sol-trade-sdk 4.0.22`. No local `../sol-safekey` checkout is required.
+
 <p align="center">
     <a href="README_CN.md">中文</a> |
     <a href="README.md">English</a> |
@@ -28,9 +30,11 @@
 ## Create a keystore
 
 ```bash
-cd sol-safekey
-cargo run --release -- export <private_key_or_mnemonic> ../pumpfun_trade_with_safekey/keystore.json
+cargo install sol-safekey --version 0.1.8 --features full --locked
+sol-safekey start
 ```
+
+Choose **Create encrypted key** → **Import existing private key** → **Save as Keystore file**, and use this crate's `keystore.json` path.
 
 Then point `keystore_path` in `pumpfun_trade_with_safekey/config/dev/solana.yaml` to that file.
 
@@ -38,7 +42,7 @@ For longer documentation (SWQoS, nonce, security), see [pumpswap_trade_with_safe
 
 ## Before you run
 
-1. Clone **[sol-safekey](https://github.com/0xfnzero/sol-safekey)** separately and export `keystore.json` (this repo does not vendor it)—see root [README.md](../README.md).
+1. Install the optional `sol-safekey` CLI and export `keystore.json` as shown above. Cargo downloads the library dependency automatically.
 2. In this crate:
 
 ```bash
@@ -64,9 +68,11 @@ cargo build --release
 
 ## Behavior summary
 
-- **1 round** by default: buy → wait ~30s → sell full mint balance (`ROUNDS` in `src/run.rs`).
+- **1 round** by default: read balance → buy and confirm → wait ~30s → sell only this round's balance increase (`ROUNDS` in `src/run.rs`).
 - **2+ SWQoS** requires durable nonce; empty YAML placeholders are skipped so **`NONCE_ACCOUNT`** still works.
 - Params are refreshed from RPC before sell, same as `pumpfun_trade`.
+- Buy uses `SimpleBuyParams + BuyAmount::WithMaxInput`; sell uses `SellAmount::ExactInput`. Buy and sell slippage default to 500 bps (5%).
+- `SKIP_TRADING` keeps wallet unlock and RPC probing enabled while preventing buy/sell submission.
 
 ---
 

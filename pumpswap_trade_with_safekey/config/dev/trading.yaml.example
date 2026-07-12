@@ -4,7 +4,7 @@
 
 # 滑点（基点：1000=10%）与每笔买入金额、持仓时间
 buy_slippage_bps: 300
-sell_slippage_bps: 9980
+sell_slippage_bps: 500
 buy_sol_amount: 0.01
 hold_seconds: 20
 

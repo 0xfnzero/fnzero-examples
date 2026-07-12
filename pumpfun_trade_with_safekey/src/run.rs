@@ -1,17 +1,15 @@
 //! 买→休息→卖→休息 循环执行逻辑（PumpFun 内盘 bonding curve）。
-//! 每轮按钱包该 mint 的**全部**代币余额卖出（含买入前已有持仓），与 `pumpswap_trade` 示例一致。
+//! 每轮只卖出本轮买入产生的余额增量，保留钱包已有持仓。
 
 use sol_trade_sdk::{
-    common::{
-        fast_fn::get_associated_token_address_with_program_id_fast_use_seed,
-        nonce_cache::{fetch_nonce_info, DurableNonceInfo},
-    },
+    common::nonce_cache::{fetch_nonce_info, DurableNonceInfo},
     swqos::SwqosType,
     trading::{
         core::params::{DexParamEnum, PumpFunParams},
         factory::DexType,
     },
-    SolanaTrade, TradeTokenType,
+    AccountPolicy, BuyAmount, SellAmount, SimpleBuyParams, SimpleSellParams, SolanaTrade,
+    TradeTokenType,
 };
 use solana_sdk::pubkey::Pubkey;
 
@@ -54,37 +52,18 @@ pub async fn run_pumpfun_loop(
         sell_slippage_bps,
         skip_trading,
     } = run_config;
-    let payer_pubkey = client.get_payer_pubkey();
-    let use_seed = true;
-
+    if sol_lamports == 0 {
+        anyhow::bail!("买入金额必须大于 0 lamports");
+    }
+    if buy_slippage_bps >= 10_000 || sell_slippage_bps >= 10_000 {
+        anyhow::bail!("买入和卖出滑点必须小于 10000 bps");
+    }
     for round in 1..=ROUNDS {
         println!("\n========== 第 {} / {} 轮 ==========", round, ROUNDS);
 
         let gas = build_gas_fee_strategy(trading_config, swqos_types);
-        let recent_blockhash = client.infrastructure.rpc.get_latest_blockhash().await?;
         let pump_params =
             PumpFunParams::from_mint_by_rpc(&client.infrastructure.rpc, &mint_pubkey).await?;
-
-        let mint_ata = get_associated_token_address_with_program_id_fast_use_seed(
-            &payer_pubkey,
-            &mint_pubkey,
-            &pump_params.token_program,
-            use_seed,
-        );
-        let mint_ata_exists = client
-            .infrastructure
-            .rpc
-            .get_account(&mint_ata)
-            .await
-            .is_ok();
-        let create_mint_ata = !mint_ata_exists;
-        if round == 1 {
-            if mint_ata_exists {
-                println!("[1c] 代币 ATA 已存在 ({})，买入时将不再创建", mint_ata);
-            } else {
-                println!("[1c] 代币 ATA 不存在，买入时将按需创建");
-            }
-        }
 
         if skip_trading {
             let balance = client
@@ -101,28 +80,40 @@ pub async fn run_pumpfun_loop(
             continue;
         }
 
+        let balance_before = client
+            .get_payer_token_balance_with_program(&mint_pubkey, &pump_params.token_program)
+            .await?;
+
         println!("[2] 买入（PumpFun 内盘，同时发往所有已配置 SWQoS）...");
-        let buy_params = sol_trade_sdk::TradeBuyParams {
-            dex_type: DexType::PumpFun,
-            input_token_type: TradeTokenType::SOL,
-            mint: mint_pubkey,
-            input_token_amount: sol_lamports,
-            slippage_basis_points: Some(buy_slippage_bps),
-            recent_blockhash: Some(recent_blockhash),
-            extension_params: DexParamEnum::PumpFun(pump_params.clone()),
-            address_lookup_table_account: None,
-            wait_tx_confirmed: false,
-            create_input_token_ata: false,
-            close_input_token_ata: false,
-            create_mint_ata,
-            durable_nonce: durable_nonce_buy.clone(),
-            fixed_output_token_amount: None,
-            gas_fee_strategy: gas.clone(),
-            simulate: false,
-            use_exact_sol_amount: None,
-            grpc_recv_us: None,
+        let buy_amount = BuyAmount::WithMaxInput {
+            quote_amount: sol_lamports,
         };
-        let (ok, sigs, err, _) = client.buy(buy_params).await?;
+        let buy_params = if let Some(nonce) = durable_nonce_buy.clone() {
+            SimpleBuyParams::with_durable_nonce(
+                DexType::PumpFun,
+                TradeTokenType::SOL,
+                mint_pubkey,
+                buy_amount,
+                DexParamEnum::PumpFun(pump_params.clone()),
+                nonce,
+                gas.clone(),
+            )
+        } else {
+            SimpleBuyParams::new(
+                DexType::PumpFun,
+                TradeTokenType::SOL,
+                mint_pubkey,
+                buy_amount,
+                DexParamEnum::PumpFun(pump_params.clone()),
+                client.infrastructure.rpc.get_latest_blockhash().await?,
+                gas.clone(),
+            )
+        }
+        .slippage_basis_points(buy_slippage_bps)
+        .account_policy(AccountPolicy::Auto)
+        .wait_tx_confirmed(true)
+        .wait_for_all_submits(false);
+        let (ok, sigs, err, _) = client.buy_simple(buy_params).await?;
         if !ok {
             let e = err
                 .as_ref()
@@ -137,13 +128,21 @@ pub async fn run_pumpfun_loop(
 
         let pump_for_balance =
             PumpFunParams::from_mint_by_rpc(&client.infrastructure.rpc, &mint_pubkey).await?;
-        let balance = client
+        let balance_after = client
             .get_payer_token_balance_with_program(&mint_pubkey, &pump_for_balance.token_program)
             .await?;
-        if balance == 0 {
-            anyhow::bail!("第 {} 轮：代币余额为 0，无法卖出", round);
+        let position_amount = balance_after.checked_sub(balance_before).ok_or_else(|| {
+            anyhow::anyhow!(
+                "第 {} 轮：买入后余额 {} 小于买入前余额 {}，拒绝卖出旧持仓",
+                round,
+                balance_after,
+                balance_before
+            )
+        })?;
+        if position_amount == 0 {
+            anyhow::bail!("第 {} 轮：买入确认后余额没有增加，拒绝卖出", round);
         }
-        println!("[4] 卖出 {} tokens...", balance);
+        println!("[4] 仅卖出本轮买入的 {} tokens...", position_amount);
 
         let durable_nonce_sell_fresh = if let Some(ref info) = durable_nonce_sell {
             if let Some(nonce_account) = info.nonce_account {
@@ -163,31 +162,38 @@ pub async fn run_pumpfun_loop(
             None
         };
 
-        let recent_blockhash_sell = client.infrastructure.rpc.get_latest_blockhash().await?;
+        // 卖出前重新拉取链上参数（creator_vault / bonding curve 状态等）
         let pump_params_sell =
             PumpFunParams::from_mint_by_rpc(&client.infrastructure.rpc, &mint_pubkey).await?;
 
-        let sell_params = sol_trade_sdk::TradeSellParams {
-            dex_type: DexType::PumpFun,
-            output_token_type: TradeTokenType::SOL,
-            mint: mint_pubkey,
-            input_token_amount: balance,
-            slippage_basis_points: Some(sell_slippage_bps),
-            recent_blockhash: Some(recent_blockhash_sell),
-            with_tip: true,
-            extension_params: DexParamEnum::PumpFun(pump_params_sell),
-            address_lookup_table_account: None,
-            wait_tx_confirmed: false,
-            create_output_token_ata: true,
-            close_output_token_ata: false,
-            close_mint_token_ata: false,
-            grpc_recv_us: None,
-            durable_nonce: durable_nonce_sell_fresh,
-            fixed_output_token_amount: None,
-            gas_fee_strategy: gas,
-            simulate: false,
+        let sell_amount = SellAmount::ExactInput(position_amount);
+        let sell_params = if let Some(nonce) = durable_nonce_sell_fresh {
+            SimpleSellParams::with_durable_nonce(
+                DexType::PumpFun,
+                TradeTokenType::SOL,
+                mint_pubkey,
+                sell_amount,
+                DexParamEnum::PumpFun(pump_params_sell),
+                nonce,
+                gas,
+            )
+        } else {
+            SimpleSellParams::new(
+                DexType::PumpFun,
+                TradeTokenType::SOL,
+                mint_pubkey,
+                sell_amount,
+                DexParamEnum::PumpFun(pump_params_sell),
+                client.infrastructure.rpc.get_latest_blockhash().await?,
+                gas,
+            )
         };
-        let (ok, sigs, err, _) = client.sell(sell_params).await?;
+        let sell_params = sell_params
+            .slippage_basis_points(sell_slippage_bps)
+            .account_policy(AccountPolicy::Auto)
+            .wait_tx_confirmed(true)
+            .wait_for_all_submits(false);
+        let (ok, sigs, err, _) = client.sell_simple(sell_params).await?;
         if !ok {
             let e = err
                 .as_ref()

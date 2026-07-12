@@ -63,7 +63,7 @@
 |------|----------|
 | 交易示例 | PumpFun 买卖循环、PumpSwap 买卖循环、加密 keystore 版本 |
 | 狙击示例 | 通过 Yellowstone gRPC 或 Jito ShredStream 监听 PumpFun 创建者首次买入 |
-| 使用的 SDK | `sol-trade-sdk`、`sol-parser-sdk`，以及可选的本地 `sol-safekey` 克隆 |
+| 使用的 SDK | `sol-trade-sdk`、`sol-parser-sdk` 和 `sol-safekey` |
 | 目标用户 | Solana Bot 开发者、跟单系统开发者、DEX 集成开发者和测试 FnZero SDK 工作流的运维人员 |
 
 ## ✨ 特性
@@ -73,7 +73,7 @@
 - **全面的 SDK**: 用于交易、解析、密钥管理和流式处理的模块化 SDK
 - **实时流式处理**: 基于 gRPC 的交易流式处理和低延迟事件解析
 - **安全密钥管理**: 支持密码保护的加密密钥库
-- **生产就绪**: 优化的构建配置，支持跨平台（Linux、macOS）
+- **生产导向**: 提供优化构建与关键工作流；示例不是完整生产系统，仍需补充风控、状态机和监控
 
 ## 📁 项目结构
 
@@ -87,7 +87,7 @@ fnzero-examples/
 └── pumpfun_shredstream_sniper/  # PumpFun ShredStream 监听狙击示例（直接私钥）
 ```
 
-`sol-safekey/`、`sol-trade-sdk/`、`sol-parser-sdk/` 和 `solana-streamer/` 是外部项目。如果为了本地开发把它们克隆到本仓库根目录，`.gitignore` 会忽略这些目录。
+加密 keystore 示例会由 Cargo 从 crates.io 获取 `sol-safekey`，不再要求同级源码目录。可选的本地 SDK 开发克隆仍由 `.gitignore` 忽略。
 
 ---
 
@@ -104,6 +104,8 @@ fnzero-examples/
 | **PumpFun gRPC 狙击** | 通过 `sol-parser-sdk` gRPC 监听创建者首次买入，只买 1 笔，3 秒后自动卖出 | `./run.sh` | [pumpfun_grpc_sniper](./pumpfun_grpc_sniper/) |
 | **PumpFun ShredStream 狙击** | 通过 `sol-parser-sdk` ShredStream 监听创建者首次买入，只买 1 笔，3 秒后自动卖出 | `./run.sh` | [pumpfun_shredstream_sniper](./pumpfun_shredstream_sniper/) |
 
+> **Safekey 兼容性说明：**两个 `*_with_safekey` crate 已统一使用 `sol-safekey 0.1.8`、`sol-trade-sdk 4.0.22` 和与普通私钥示例相同的高层 `Simple*Params` API；Cargo 会自动下载钱包库。
+
 ### 如何选择示例
 
 | 场景 | 推荐目录 |
@@ -115,6 +117,8 @@ fnzero-examples/
 | 监听 gRPC 交易流狙击 PumpFun 新币 | `pumpfun_grpc_sniper` |
 | 监听 ShredStream 外层指令狙击 PumpFun 新币 | `pumpfun_shredstream_sniper` |
 
+低延迟架构、交易模式、状态新鲜度、SWQoS 和滑点重报价说明见 **[低延迟 Bot 开发指南](./LOW_LATENCY_BOT_GUIDE_CN.md)**。
+
 ### 示例特性（四个循环交易示例共通）
 
 - ✅ **自动化流程**: 买入 → 等待约 30 秒 → 卖出；**默认执行 1 轮**（可在各示例 `src/run.rs` 中修改 `ROUNDS`、`REST_SECS`）
@@ -123,7 +127,7 @@ fnzero-examples/
 - ✅ **Durable Nonce**: 启用 **2 个及以上** SWQoS 时需在 `nonce_config` 或环境变量 `NONCE_ACCOUNT` 中配置有效 nonce 账户；YAML 中占位 `""` 会被忽略并回退到 `NONCE_ACCOUNT`
 - ✅ **Gas / 滑点**: `trading.yaml` 中可配
 - ✅ **默认不等待链上确认**（`wait_tx_confirmed: false`），买入后依赖固定等待时间再查余额；生产环境可按需改为等待确认或加长等待
-- ⚠️ **卖出数量**: 每轮按钱包该 mint 的**全部**代币余额卖出（含买入前已有持仓）
+- **卖出数量**: 每轮记录买前余额，等待买入确认后仅卖出本轮新增的余额，不触碰已有持仓
 
 ### 示例文档索引
 
@@ -263,16 +267,16 @@ cp .env.example .env
 
 `APP_ENV=dev` 读 `config/dev/`，`APP_ENV=prod` 读 `config/prod/`。
 
-### 3. 使用加密钱包时：单独准备 sol-safekey
+### 3. 使用加密钱包时：按需安装 sol-safekey CLI
 
-本仓库的 `.gitignore` 会忽略本地 [sol-safekey](https://github.com/0xfnzero/sol-safekey) 克隆。需要运行加密 keystore 示例或生成 `keystore.json` 时，请把它克隆到仓库根目录：
+加密示例使用的 `sol-safekey` 库由 Cargo 自动从 crates.io 下载。只有需要创建或管理 `keystore.json` 时才安装 CLI：
 
 ```bash
-cd /path/to/fnzero-examples
-git clone https://github.com/0xfnzero/sol-safekey.git sol-safekey
-cd sol-safekey
-cargo run --release -- export <私钥或助记词> /path/to/fnzero-examples/pumpswap_trade_with_safekey/keystore.json
+cargo install sol-safekey --version 0.1.8 --features full --locked
+sol-safekey start
 ```
+
+在菜单中依次选择“创建加密私钥”→“导入现有私钥并加密”→“保存为 Keystore 文件”，输出到 `/path/to/fnzero-examples/pumpswap_trade_with_safekey/keystore.json`。
 
 再在对应示例的 `solana.yaml` 中设置 `keystore_path`（如 `./keystore.json`）。
 
@@ -314,13 +318,11 @@ cp config/dev/trading.yaml.example config/dev/trading.yaml
 # 或: cargo run --release -- <TOKEN_MINT_ADDRESS>
 ```
 
-**方式 2：加密 keystore**（需已按上文单独克隆 [sol-safekey](https://github.com/0xfnzero/sol-safekey)）
+**方式 2：加密 keystore**（示例库依赖会自动下载；生成 keystore 时安装 CLI）
 
 ```bash
-cd /path/to/fnzero-examples
-git clone https://github.com/0xfnzero/sol-safekey.git sol-safekey  # 已克隆则跳过
-cd sol-safekey
-cargo run --release -- export <你的私钥或助记词> /path/to/fnzero-examples/pumpswap_trade_with_safekey/keystore.json
+cargo install sol-safekey --version 0.1.8 --features full --locked
+sol-safekey start
 
 cd /path/to/fnzero-examples/pumpswap_trade_with_safekey   # PumpFun 则用 pumpfun_trade_with_safekey
 
@@ -331,6 +333,8 @@ cp config/dev/trading.yaml.example config/dev/trading.yaml
 
 ./run.sh <TOKEN_MINT_ADDRESS>
 ```
+
+运行 `sol-safekey start` 时依次选择“创建加密私钥”→“导入现有私钥并加密”→“保存为 Keystore 文件”，然后填写目标示例的 `keystore.json` 路径。
 
 ### 配置详情
 
@@ -391,7 +395,7 @@ cargo build --release
 
 MIT License
 
-详见 [LICENSE](./LICENSE)。
+本仓库当前声明使用 MIT License；权威许可信息以项目上游仓库元数据为准。
 
 ---
 

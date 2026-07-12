@@ -62,6 +62,7 @@
 4. **灵活配置**：支持 YAML 配置文件和环境变量
 5. **环境变量优先级**：环境变量可覆盖配置文件中的敏感信息
 6. **跨平台构建**：支持 Linux 部署的构建脚本
+7. **明确交易意图**：买入使用 `SimpleBuyParams + BuyAmount::WithMaxInput`，卖出使用 `SellAmount::ExactInput`；买卖滑点默认均为 500 bps（5%）。只有业务必须固定花费 quote 时才改用 `ExactInput`。
 
 ---
 

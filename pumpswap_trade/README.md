@@ -62,6 +62,7 @@
 4. **Flexible Configuration**: Support for both YAML config files and environment variables
 5. **Environment Priority**: Environment variables override config file settings for sensitive data
 6. **Cross-Platform Build**: Build scripts for Linux deployment
+7. **Explicit Trade Intent**: Buy uses `SimpleBuyParams` with `BuyAmount::WithMaxInput`; sell uses `SellAmount::ExactInput`. Buy and sell slippage default to 500 bps (5%). Use `ExactInput` only when exact quote spend is required.
 
 ---
 

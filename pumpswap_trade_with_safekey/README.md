@@ -7,6 +7,8 @@
     <strong>Rust example: PumpSwap outer AMM buy → wait ~30s → sell (1 round by default; see <code>src/run.rs</code>). Encrypted keystore + multi-SWQoS.</strong>
 </p>
 
+> This crate uses `sol-safekey 0.1.8` from crates.io and `sol-trade-sdk 4.0.22`. No local `../sol-safekey` checkout is required.
+
 <p align="center">
     <a href="https://github.com/0xfnzero/fnzero-examples">
         <img src="https://img.shields.io/github/stars/0xfnzero/fnzero-examples?style=social" alt="GitHub stars">
@@ -57,6 +59,7 @@
 4. **Flexible Configuration**: Support for both YAML config files and environment variables
 5. **Environment Priority**: Environment variables override config file settings for sensitive data
 6. **Cross-Platform Build**: Build scripts for Linux deployment
+7. **Explicit Trade Intent**: Buy uses `SimpleBuyParams + BuyAmount::WithMaxInput`; sell uses `SellAmount::ExactInput`. Buy and sell slippage default to 500 bps (5%).
 
 ---
 
@@ -82,7 +85,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 ### First-time setup (privacy)
 
-1. Clone **[sol-safekey](https://github.com/0xfnzero/sol-safekey)** separately to build `keystore.json` (not included in this repo)—see root [README.md](../README.md).
+1. Install the optional `sol-safekey` CLI to create `keystore.json`; Cargo downloads the library dependency automatically.
 2. In this crate:
 
 ```bash
@@ -135,23 +138,17 @@ This guide will walk you through setting up everything using **sol-safekey**, in
 
 ##### Step 1: Install sol-safekey
 
-**Install from source (Recommended):**
+**Install from crates.io (Recommended):**
 
 ```bash
-# 1. Clone or navigate to sol-safekey project directory
-cd /path/to/sol-safekey
-
-# 2. Build and install with full feature
-cargo install --path . --features="full"
-
-# 3. Verify installation
+cargo install sol-safekey --version 0.1.8 --features full --locked
 sol-safekey --version
 ```
 
-**Install from crates.io:**
+**Install a local development checkout:**
 
 ```bash
-cargo install sol-safekey --features="full"
+cargo install --path /path/to/sol-safekey --features full --locked
 ```
 
 ##### Step 2: Start Interactive Menu

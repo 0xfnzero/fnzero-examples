@@ -196,7 +196,7 @@ async fn main() -> anyhow::Result<()> {
     let sell_slippage_bps = trading_config
         .as_ref()
         .map(|t| t.sell_slippage_bps)
-        .unwrap_or(9980);
+        .unwrap_or(500);
 
     run::run_pumpswap_loop(
         &client,
