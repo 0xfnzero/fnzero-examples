@@ -14,7 +14,7 @@
     <a href="https://github.com/0xfnzero/fnzero-examples/network">
         <img src="https://img.shields.io/github/forks/0xfnzero/fnzero-examples?style=social" alt="GitHub forks">
     </a>
-    <a href="https://github.com/0xfnzero/fnzero-examples/blob/main/LICENSE">
+    <a href="#-许可证">
         <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
     </a>
 </p>
