@@ -203,7 +203,6 @@ The following SWQoS services are supported:
 | ZeroSlot | API Key |
 | Temporal | API Key |
 | FlashBlock | API Key |
-| Node1 | API Key |
 
 Apply for API keys at: https://fnzero.dev/swqos
 

@@ -155,7 +155,6 @@ See the **[low-latency bot development guide](./LOW_LATENCY_BOT_GUIDE.md)** for 
 | **FlashBlock** | HTTP |
 | **Jito** | HTTP |
 | **NextBlock** | HTTP |
-| **Node1** | HTTP, QUIC ⚡ |
 | **Soyas** | QUIC ⚡ |
 | **Speedlanding** | QUIC ⚡ |
 | **Stellium** | HTTP |
@@ -165,7 +164,7 @@ See the **[low-latency bot development guide](./LOW_LATENCY_BOT_GUIDE.md)** for 
 
 **API Key Application**: Apply for API keys through the official website: [https://fnzero.dev/swqos](https://fnzero.dev/swqos)
 
-**Note**: ⚡ = QUIC (Quick UDP Internet Connections) provides lower latency compared to HTTP/gRPC. Services using QUIC (Astralane, Node1, Soyas, Speedlanding) typically offer the best transaction submission performance.
+**Note**: ⚡ = QUIC (Quick UDP Internet Connections) provides lower latency compared to HTTP/gRPC. Services using QUIC (Astralane, Soyas, Speedlanding) typically offer the best transaction submission performance.
 
 ---
 

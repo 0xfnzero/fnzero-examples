@@ -155,7 +155,6 @@ fnzero-examples/
 | **FlashBlock** | HTTP |
 | **Jito** | HTTP |
 | **NextBlock** | HTTP |
-| **Node1** | HTTP, QUIC ⚡ |
 | **Soyas** | QUIC ⚡ |
 | **Speedlanding** | QUIC ⚡ |
 | **Stellium** | HTTP |
@@ -165,7 +164,7 @@ fnzero-examples/
 
 **API Key 申请**：通过官方网站申请 API 密钥：[https://fnzero.dev/swqos](https://fnzero.dev/swqos)
 
-**注意**：⚡ = QUIC（Quick UDP Internet Connections）相比 HTTP/gRPC 提供更低的延迟。使用 QUIC 的服务（Astralane、Node1、Soyas、Speedlanding）通常提供最佳的交易提交性能。
+**注意**：⚡ = QUIC（Quick UDP Internet Connections）相比 HTTP/gRPC 提供更低的延迟。使用 QUIC 的服务（Astralane、Soyas、Speedlanding）通常提供最佳的交易提交性能。
 
 ---
 

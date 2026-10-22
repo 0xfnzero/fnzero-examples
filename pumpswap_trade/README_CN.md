@@ -203,7 +203,6 @@ config/
 | ZeroSlot | API Key |
 | Temporal | API Key |
 | FlashBlock | API Key |
-| Node1 | API Key |
 
 申请 API 密钥：https://fnzero.dev/swqos
 
